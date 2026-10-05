@@ -1,0 +1,20 @@
+# Temporary working directories
+/tmp_hw/
+/tmp_hw/**
+
+# Log files
+*.log
+/log/*.txt
+
+# Fitbit logcat captures
+fitbit_logcat_*.txt
+
+# Build/cache artifacts
+/.kotlin/errors/
+/.gradle/
+/build/
+/.idea/
+
+# Large decompiled APK output (can be regenerated from ApkInput/)
+/Decoded/
+/Decoded/**
