@@ -186,7 +186,7 @@ Make sure Git LFS is installed before cloning:
 
 ```bash
 git lfs install
-git clone https://github.com/MrTech59/BlueBit.git
+git clone https://github.com/Connor-Projects/BlueBit.git
 ```
 
 ---
