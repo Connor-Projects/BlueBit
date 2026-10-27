@@ -1,0 +1,12 @@
+rec_frame,direction,ip_src,ip_dst,ip_id,rec_len,status,note
+12684,tracker->phone,169.254.0.3,169.254.0.2,9,242,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+13471,tracker->phone,169.254.0.3,169.254.0.2,65,99,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+13479,tracker->phone,169.254.0.3,169.254.0.2,66,99,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+14943,phone->tracker,169.254.0.2,169.254.0.3,40,1040,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16372,phone->tracker,169.254.0.2,169.254.0.3,62,86,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16383,phone->tracker,169.254.0.2,169.254.0.3,63,86,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16384,phone->tracker,169.254.0.2,169.254.0.3,64,86,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16390,phone->tracker,169.254.0.2,169.254.0.3,65,86,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16396,phone->tracker,169.254.0.2,169.254.0.3,66,86,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16448,phone->tracker,169.254.0.2,169.254.0.3,73,521,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)
+16454,phone->tracker,169.254.0.2,169.254.0.3,74,463,missing_in_pcap,reconstructed packet is absent from the PCAP (fragmentation/reassembly error)

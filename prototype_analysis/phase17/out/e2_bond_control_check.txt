@@ -1,0 +1,32 @@
+E2 — does `/bond/control` appear in the official captured session?
+========================================================================
+
+Input samples CSV : G:\Dev\BlueBit\inspire3_decryption_analysis\decrypted_coap_samples.csv
+  sha256          : 4dc8c8a16a098c99325b09e0cbfcceaf03157de186601956133b4d12eab72d33
+Decrypted messages: 74
+Inner frame range : 9..204
+
+ANSWER: NO — no message with a URI path containing 'bond' exists in the bootstrap-decrypted set.
+
+Every distinct URI path observed (with placeholder for empty):
+  - /events
+  - /md/3d02
+  - /pair/display
+  - /sync/config
+  - /sync/dump
+  - /sync/response
+
+Messages whose path contains 'bond'    : 0
+Messages whose path contains 'control' : 0
+
+DTLS PSK identities observed on the wire (from dtls_handshake_summary.csv):
+  BLE frame  12184  tracker->phone  identity=MD-A2CB0B8E-6AE5D947
+  BLE frame  12241  tracker->phone  identity=BOOTSTRAP
+  BLE frame  13226  tracker->phone  identity=MD-A376B03C-6AF89570
+
+DTLS alerts observed on the wire:
+  BLE frame  12186  phone->tracker  level=2  desc=unknown_psk_identity
+
+Identity attribution for the CoAP set:
+  All 74 decrypted CoAP messages fall in inner frames 9..204, i.e. the BOOTSTRAP session window (DECRYPTION_REPORT.md §4.4). The tracker's MobileData re-key begins at inner frame 56 and completes at inner frame 204; after that, records are encrypted under MobileData keys and are NOT decryptable with the BOOTSTRAP PSK.
+  => Every decrypted CoAP message below was exchanged under the BOOTSTRAP PSK identity, NOT under a MobileData identity.

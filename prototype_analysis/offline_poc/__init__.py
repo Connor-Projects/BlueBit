@@ -1,0 +1,1 @@
+# BlueBit offline protocol proof of concept.

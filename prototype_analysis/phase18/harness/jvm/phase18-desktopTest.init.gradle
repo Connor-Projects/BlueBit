@@ -1,0 +1,43 @@
+// Phase 18 - desktopTest source-set injection (Gradle init script).
+//
+// Purpose: run the Phase 18 replay test in
+// `prototype_analysis/phase18/harness/jvm/` WITHOUT copying any file into the
+// BlueBit source tree and WITHOUT modifying any existing file.
+//
+// This script only ADDS an extra source directory to the `desktopTest` source
+// set of the `app` project and passes the evidence directory to the test JVM as
+// the system property `phase18.evidence.dir`. It does not remove, overwrite, or
+// relocate anything.
+//
+// Usage (from BlueBitApp/):
+//   .\gradlew.bat :app:desktopTest --tests "bluebit.fitbit.phase18.*" --offline \
+//       --init-script "..\prototype_analysis\phase18\harness\jvm\phase18-desktopTest.init.gradle"
+//
+// Nothing here builds an APK; `:app:desktopTest` compiles JVM/desktop code only.
+
+gradle.projectsLoaded {
+    gradle.rootProject.allprojects { p ->
+        p.plugins.withId("org.jetbrains.kotlin.multiplatform") {
+            // The `desktopTest` source set is created by the `kotlin { sourceSets { } }`
+            // block during evaluation, so the extra dir can only be added once the
+            // project has been evaluated.
+            p.afterEvaluate {
+                def kmp = p.extensions.findByName("kotlin")
+                def extra = new File(p.rootDir, "../prototype_analysis/phase18/harness/jvm")
+                def evidence = new File(p.rootDir, "../prototype_analysis/phase18/evidence")
+                def ss = kmp == null ? null : kmp.sourceSets.findByName("desktopTest")
+                if (ss != null && extra.isDirectory()) {
+                    ss.kotlin.srcDir(extra)
+                    p.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+                        // Absolute path, so the test never has to guess a working directory.
+                        systemProperty "phase18.evidence.dir", evidence.absolutePath
+                    }
+                    p.logger.lifecycle("[phase18-init] desktopTest += ${extra}")
+                    p.logger.lifecycle("[phase18-init] evidence dir = ${evidence.absolutePath}")
+                } else {
+                    p.logger.warn("[phase18-init] could not add ${extra} (sourceSet=${ss != null}, dir=${extra.isDirectory()})")
+                }
+            }
+        }
+    }
+}

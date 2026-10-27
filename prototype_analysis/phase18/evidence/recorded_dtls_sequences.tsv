@@ -1,0 +1,15 @@
+# Phase 18 - recorded DTLS status sequences, extracted from EXISTING captures.
+# No new device capture was made in Phase 18; these are historical records.
+#
+# Source filter : lines matching 'BlueBitGG_Stack: onDtlsStatusChange state=<n> code=<n>'
+# Ordering      : file order
+# Session split : a new session starts when the gap to the previous notification exceeds 10 s
+#                 (max intra-session gap observed here is 2.13 s; min inter-session gap is ~54 min)
+#
+# Columns: sessionId <TAB> sourceFile(repo-relative) <TAB> sourceSha256 <TAB> firstTimestamp <TAB> lastTimestamp <TAB> sequence(state:code,...)
+#
+# These sequences are the input to Phase18RecordedSequenceReplayTest.kt, which replays them
+# through the REAL production class bluebit.fitbit.diagnostics.DtlsProbeStateMachine.
+S01	prototype_analysis/captured-logs/phase16/phase16_live_logcat.txt	71d5cc0361ecbac970e7dcb81aa9e5ca576ef34a9a191ffe697a817e6db5f0f2	10-19 16:33:04.647	10-19 16:33:05.244	1:0,3:-10601,0:0,1:0,0:0,1:0,2:0
+S02	prototype_analysis/captured-logs/goldengate_diag_controlled_logcat.txt	2ec5264c53916470d72c55aee6d32b4b31847bbca963c6b50222a8ab69e2be6a	10-18 16:24:58.515	10-18 16:25:00.804	1:0,0:0,1:0,2:0
+S03	prototype_analysis/captured-logs/goldengate_diag_controlled_logcat.txt	2ec5264c53916470d72c55aee6d32b4b31847bbca963c6b50222a8ab69e2be6a	10-18 17:19:30.309	10-18 17:19:32.992	1:0,0:0,1:0,3:-10601,0:0,1:0,0:0,1:0,2:0

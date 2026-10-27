@@ -1,0 +1,91 @@
+======================================================================
+RECONSTRUCTION VALIDATION
+======================================================================
+
+1. reconstructed_packets.csv counts
+   total rows: 341
+   phone->tracker: 178
+   tracker->phone: 163
+
+2. missing_packets.csv count
+   total rows: 11
+
+3. pcap_comparison.csv status counts
+   exact: 300
+   truncated: 30
+
+4. Truncated/malformed frames: 30
+   by direction: {'tracker->phone': 28, 'phone->tracker': 2}
+
+   frame  pcap_len  rec_len  direction                ip_id  rec_total_len
+      23       77     1101  tracker->phone            11       1101
+      25       77     1101  tracker->phone            12       1101
+      27       77     1101  tracker->phone            13       1101
+      29       77     1101  tracker->phone            14       1101
+      31       77     1101  tracker->phone            15       1101
+      33       77     1101  tracker->phone            16       1101
+      35       77     1101  tracker->phone            17       1101
+      37       77     1101  tracker->phone            18       1101
+      39       77     1101  tracker->phone            19       1101
+      41       77     1101  tracker->phone            20       1101
+      43       77     1101  tracker->phone            21       1101
+      45       77     1101  tracker->phone            22       1101
+      47       77     1101  tracker->phone            23       1101
+      49       77     1101  tracker->phone            24       1101
+      51       77     1101  tracker->phone            25       1101
+      53       77     1101  tracker->phone            26       1101
+      55       78     1102  tracker->phone            27       1102
+      57       78     1102  tracker->phone            28       1102
+      59       78     1102  tracker->phone            29       1102
+      61       78     1102  tracker->phone            30       1102
+      63       78     1102  tracker->phone            31       1102
+      65       78     1102  tracker->phone            32       1102
+      67       78     1102  tracker->phone            33       1102
+      69       78     1102  tracker->phone            34       1102
+      71       78     1102  tracker->phone            35       1102
+      73       78     1102  tracker->phone            36       1102
+      75       78     1102  tracker->phone            37       1102
+      77       67      579  tracker->phone            38        579
+      78       91     1115  phone->tracker            39       1115
+     163      176      432  phone->tracker            72        432
+
+5. Sample non-truncated frames: IPv4 total-length vs ATT payload sum
+   selected 10 exact frames
+   first_ble_frame  direction           ip_total_len  att_sum  match
+   12167            tracker->phone       129           129      YES
+   12174            phone->tracker       159           159      YES
+   12184            tracker->phone       150           150      YES
+   12186            phone->tracker       43            43       YES
+   12221            tracker->phone       129           129      YES
+   12228            phone->tracker       159           159      YES
+   12241            tracker->phone       139           139      YES
+   12247            phone->tracker       103           103      YES
+   12253            phone->tracker       92            92       YES
+   12260            tracker->phone       87            87       YES
+   all match: YES
+
+6. Bootstrap handshake parameters
+   frame 12221 tracker->phone         handshake/ClientHello
+   frame 12228 phone->tracker         handshake/ServerHello
+   frame 12228 phone->tracker         handshake/ServerHelloDone
+   frame 12241 tracker->phone         handshake/ClientKeyExchange
+   frame 12241 tracker->phone         change_cipher_spec/
+   frame 12241 tracker->phone         handshake/0x00
+   frame 12247 phone->tracker         change_cipher_spec/
+   frame 12247 phone->tracker         handshake/0x00
+
+   Client random (frame 12221): 386d43d10a4127f429d31b6f56a3e21572d2e977780c0025013d14bdad2c1283
+   Server random (frame 12228): 6ad3ab5594fba08b378d98121f8723a60909895fe472d4d2c79ba6f060f9cef8
+   PSK identity used: BOOTSTRAP
+
+   First application-data records after bootstrap handshake:
+     frame 12253 phone->tracker         epoch=1 seq=1
+     frame 12260 tracker->phone         epoch=1 seq=1
+     frame 12263 phone->tracker         epoch=1 seq=2
+     frame 12267 phone->tracker         epoch=1 seq=3
+     frame 12271 tracker->phone         epoch=1 seq=2
+     frame 12279 tracker->phone         epoch=1 seq=3
+
+======================================================================
+VALIDATION COMPLETE
+======================================================================

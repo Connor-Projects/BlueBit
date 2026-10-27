@@ -1,0 +1,12 @@
+Bootstrap PSK: 810654e336adcab0a03c60f74aa0b6fb
+client_random: 386d43d10a4127f429d31b6f56a3e21572d2e977780c0025013d14bdad2c1283
+server_random: 6ad3ab5594fba08b378d98121f8723a60909895fe472d4d2c79ba6f060f9cef8
+master_secret: f4b52e77325b7c4f411e12ef5024d8fa63d9f5f5dc7b1fab7d111e62fbc77a44a0f34268c909e75003ca53785f928fbc
+client_write_key: f345845d6b5e97d433e1582f06fe5f09
+server_write_key: 8534833df5a4edfaaae4ca147e52af83
+client_write_iv:  97640d5d
+server_write_iv:  77d1d6fe
+
+Total application-data records: 329
+Verified under bootstrap key: 74
+CoAP-looking samples: 74

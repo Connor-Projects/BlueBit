@@ -1,0 +1,11 @@
+frame,direction,prefix_hex,payload_hex,note
+12157,tracker->phone,0x80,,link-control
+12158,phone->tracker,0x80,,link-control
+12160,phone->tracker,0x81,00000808,MTU=2056
+12161,tracker->phone,0x81,00000808,MTU=2056
+12197,tracker->phone,0x80,,link-control
+12200,phone->tracker,0x81,00000808,MTU=2056
+12212,tracker->phone,0x81,00000808,MTU=2056
+15236,tracker->phone,0x80,,link-control
+15237,phone->tracker,0x81,00000808,MTU=2056
+15238,tracker->phone,0x81,00000808,MTU=2056

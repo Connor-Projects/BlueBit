@@ -1,0 +1,35 @@
+// Phase 17 — desktopTest source-set injection (Gradle init script).
+//
+// Purpose: run the four Phase 17 JVM tests in `prototype_analysis/phase17/harness/jvm/`
+// WITHOUT copying any file into the BlueBit source tree and WITHOUT modifying
+// any existing file.
+//
+// This script only ADDS an extra source directory to the `desktopTest` source
+// set of the `app` project. It does not remove, overwrite, or relocate anything.
+//
+// Usage (from BlueBitApp/):
+//   .\gradlew.bat :app:desktopTest --tests "bluebit.fitbit.phase17.*" --offline \
+//       --init-script "..\prototype_analysis\phase17\harness\jvm\phase17-desktopTest.init.gradle"
+//
+// Nothing here builds an APK; `:app:desktopTest` compiles JVM/desktop code only.
+
+gradle.projectsLoaded {
+    gradle.rootProject.allprojects { p ->
+        p.plugins.withId("org.jetbrains.kotlin.multiplatform") {
+            // The `desktopTest` source set is created by the `kotlin { sourceSets { } }`
+            // block during evaluation, so the extra dir can only be added once the
+            // project has been evaluated.
+            p.afterEvaluate {
+                def kmp = p.extensions.findByName("kotlin")
+                def extra = new File(p.rootDir, "../prototype_analysis/phase17/harness/jvm")
+                def ss = kmp == null ? null : kmp.sourceSets.findByName("desktopTest")
+                if (ss != null && extra.isDirectory()) {
+                    ss.kotlin.srcDir(extra)
+                    p.logger.lifecycle("[phase17-init] desktopTest += ${extra}")
+                } else {
+                    p.logger.warn("[phase17-init] could not add ${extra} (sourceSet=${ss != null}, dir=${extra.isDirectory()})")
+                }
+            }
+        }
+    }
+}

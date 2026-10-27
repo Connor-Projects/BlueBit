@@ -1,0 +1,8 @@
+resource,requester,responder,methods,statuses,n_transactions,first_req_frame
+/events,tracker,phone,0.02 POST,2.04 Changed,1,10
+/md/3d02,tracker,phone,0.02 POST,4.01 Unauthorized,2,15
+/pair/display,phone,tracker,0.03 PUT,2.04 Changed,2,9
+/sync/config,phone,tracker,0.01 GET,4.01 Unauthorized,1,12
+/sync/dump,phone,tracker,0.01 GET,2.05 Content,28,24
+/sync/dump?t=pair,phone,tracker,0.01 GET,2.05 Content,1,19
+/sync/response,phone,tracker,0.03 PUT,2.04 Changed|2.31 Continue,2,203
