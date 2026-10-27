@@ -13,14 +13,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import bluebit.core.connection.ConnectionState
 import bluebit.core.bluetooth.BleConnection
+import bluebit.core.bluetooth.BleLogTag
+import bluebit.core.bluetooth.bleLogWatchdog
 import androidx.compose.ui.Modifier
 import bluebit.core.bluetooth.BleDevice
 import bluebit.core.provider.DeviceCapabilities
 import bluebit.core.provider.ProviderContext
 import bluebit.core.provider.ProviderDiagnostic
 import bluebit.core.pairing.PairedDeviceCoordinator
+import bluebit.core.diagnostics.CoapReadOnlyResult
 import bluebit.core.ui.components.BlueBitBottomNavigation
 import bluebit.core.ui.screens.ActivityScreen
 import bluebit.core.ui.screens.DeviceDetailScreen
@@ -29,6 +33,7 @@ import bluebit.core.ui.screens.HomeScreen
 import bluebit.core.ui.screens.Screen
 import bluebit.core.ui.screens.SettingsScreen
 import bluebit.core.ui.screens.UiDevice
+import bluebit.core.ui.screens.connectFailureNote
 import bluebit.core.ui.theme.BlueBitTheme
 
 @Composable
@@ -38,9 +43,11 @@ fun BlueBitAppShell(
     onConnect: (String) -> Unit = {},
     watchdogDumpAction: suspend (String) -> Unit = {},
     pairedDeviceCoordinator: PairedDeviceCoordinator? = null,
+    lastCoapReadOnlyResult: CoapReadOnlyResult? = null,
+    diagnosticLoggingEnabled: Boolean = false,
+    onDiagnosticLoggingToggle: (Boolean) -> Unit = {},
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
-    var debugLogging by remember { mutableStateOf(false) }
 
     val discoveredDevices = remember { mutableStateListOf<UiDevice>() }
     val scanner = providerContext.scanner
@@ -50,6 +57,11 @@ fun BlueBitAppShell(
         scanner.scanResults().collect { result ->
             val provider = providerContext.registry.resolve(result)
             val profile = provider?.identify(result)
+            if (provider == null) {
+                println("BlueBitUI: UNFILTERED_DEVICE addr=${result.address}, name=${result.name}, uuids=${result.serviceUuids}")
+            } else {
+                println("BlueBitUI: RECOGNISED_DEVICE provider=${provider.name}, profile=${profile?.name}, addr=${result.address}")
+            }
             val uiDevice = UiDevice(
                 name = result.name ?: "Unknown (${result.address})",
                 address = result.address,
@@ -133,8 +145,8 @@ fun BlueBitAppShell(
                 )
 
                 is Screen.Settings -> SettingsScreen(
-                    debugLoggingEnabled = debugLogging,
-                    onDebugLoggingToggle = { debugLogging = it },
+                    debugLoggingEnabled = diagnosticLoggingEnabled,
+                    onDebugLoggingToggle = onDiagnosticLoggingToggle,
                     onBleDiagnostics = {},
                     onDiscoveryDiagnostics = {},
                 )
@@ -160,6 +172,9 @@ fun BlueBitAppShell(
                     }
                     val scope = rememberCoroutineScope()
                     var activeConnection by remember { mutableStateOf<BleConnection?>(null) }
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var connectionStatusNote by remember { mutableStateOf<String?>(null) }
+                    val connecting = connectionState is ConnectionState.Connecting
 
                     DeviceDetailScreen(
                         deviceName = screen.deviceName,
@@ -179,20 +194,48 @@ fun BlueBitAppShell(
                             val p = provider ?: return@DeviceDetailScreen
                             val device = BleDevice(screen.deviceAddress, screen.deviceName)
                             scope.launch {
-                                if (isConnected) {
-                                    pairedDeviceCoordinator?.userDisconnect(p.id, screen.deviceAddress)
-                                    activeConnection?.let { p.disconnect(it) }
-                                    activeConnection = null
-                                } else {
-                                    pairedDeviceCoordinator?.userConnect(p.id, screen.deviceAddress)
-                                    val conn = p.createConnection(device)
-                                    activeConnection = conn
-                                    p.connect(device, conn)
+                                if (isProcessing) {
+                                    bleLogWatchdog.info(BleLogTag.CONNECTION, "CONNECT_IGNORED: address=${screen.deviceAddress}, reason=already_processing")
+                                    return@launch
+                                }
+                                isProcessing = true
+                                try {
+                                    if (isConnected) {
+                                        bleLogWatchdog.info(BleLogTag.CONNECTION, "DISCONNECT_BUTTON_PRESSED: address=${screen.deviceAddress}")
+                                        connectionStatusNote = null
+                                        pairedDeviceCoordinator?.userDisconnect(p.id, screen.deviceAddress)
+                                        activeConnection?.let { p.disconnect(it) }
+                                        activeConnection = null
+                                    } else {
+                                        bleLogWatchdog.info(BleLogTag.CONNECTION, "CONNECT_BUTTON_PRESSED: address=${screen.deviceAddress}, name=${screen.deviceName}")
+                                        connectionStatusNote = null
+                                        if (isScanning) {
+                                            bleLogWatchdog.info(BleLogTag.SCAN, "SCAN_STOP_BEFORE_CONNECT: stopping active scan")
+                                            scanner.stopScan()
+                                            delay(300)
+                                            bleLogWatchdog.info(BleLogTag.SCAN, "SCAN_STOP_SETTLE: 300ms elapsed before connect")
+                                        }
+                                        pairedDeviceCoordinator?.userConnect(p.id, screen.deviceAddress)
+                                        val conn = p.createConnection(device)
+                                        activeConnection = conn
+                                        val result = p.connect(device, conn)
+                                        if (result.isFailure) {
+                                            activeConnection = null
+                                            val error = result.exceptionOrNull()
+                                            bleLogWatchdog.error(BleLogTag.CONNECTION, "CONNECT_FAILED: address=${device.address}, error=${error?.message}")
+                                            connectionStatusNote = connectFailureNote(error)
+                                        }
+                                    }
+                                } finally {
+                                    isProcessing = false
                                 }
                             }
                         },
                         onSettings = {},
                         diagnostics = allDiagnostics,
+                        lastCoapReadOnlyResult = lastCoapReadOnlyResult,
+                        connecting = connecting,
+                        connectionStatusNote = connectionStatusNote,
                     )
                 }
             }

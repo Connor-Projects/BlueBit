@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bluebit.core.provider.ProviderDiagnostic
+import bluebit.core.diagnostics.CoapReadOnlyResult
 import bluebit.core.ui.components.BatteryCard
 import kotlinx.coroutines.launch
 import bluebit.core.ui.components.ConnectionIndicator
@@ -53,6 +54,9 @@ fun DeviceDetailScreen(
     onToggleConnection: () -> Unit,
     onSettings: () -> Unit,
     diagnostics: List<ProviderDiagnostic> = emptyList(),
+    lastCoapReadOnlyResult: CoapReadOnlyResult? = null,
+    connecting: Boolean = false,
+    connectionStatusNote: String? = null,
 ) {
     Scaffold(
         topBar = {
@@ -78,6 +82,12 @@ fun DeviceDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             ConnectionIndicator(connected = connected)
+            if (connecting && !connected) {
+                Text(text = "Connecting…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            connectionStatusNote?.let { note ->
+                Text(text = note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -112,7 +122,7 @@ fun DeviceDetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             PrimaryButton(
-                text = if (connected) "Disconnect" else "Connect",
+                text = connectionStatusLabel(connected = connected, connecting = connecting),
                 onClick = onToggleConnection,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -138,6 +148,12 @@ fun DeviceDetailScreen(
                     }
                 }
             }
+
+            lastCoapReadOnlyResult?.let { result ->
+                Spacer(modifier = Modifier.height(8.dp))
+                CoapReadOnlyResultCard(result = result)
+            }
+
             SecondaryButton(
                 text = "Sync",
                 onClick = onSync,
@@ -148,6 +164,47 @@ fun DeviceDetailScreen(
                 onClick = onSettings,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+@Composable
+private fun CoapReadOnlyResultCard(result: CoapReadOnlyResult) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = "Last CoAP Read-Only Result",
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = "success=${result.success}, dtlsEstablished=${result.dtlsEstablished}, coapSuccess=${result.coapSuccess}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = "responseCode=${result.responseCode ?: "—"}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = "responseLength=${result.responseLength}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (result.resourceSummary.isNotBlank()) {
+                Text(
+                    text = "resourceSummary=${result.resourceSummary}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            result.error?.let { error ->
+                Text(
+                    text = "error=$error",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

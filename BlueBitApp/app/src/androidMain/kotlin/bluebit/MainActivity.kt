@@ -21,23 +21,30 @@ import androidx.lifecycle.lifecycleScope
 import bluebit.BlueBitAppShell
 import bluebit.core.bluetooth.android.AndroidBleConnection
 import bluebit.core.bluetooth.android.AndroidBleScanner
+import bluebit.core.bluetooth.android.BleDiagnosticLogger
+import bluebit.core.bluetooth.BleScanner
 import bluebit.core.devices.InMemoryDeviceProfileRepository
 import bluebit.core.provider.ProviderContext
 import bluebit.core.provider.ProviderDiagnostic
 import bluebit.core.provider.ProviderRegistry
 import bluebit.core.pairing.PairedDeviceCoordinator
+import bluebit.core.permissions.DevicePermissionPolicy
 import bluebit.pairing.SharedPreferencesPairedDeviceStore
 import bluebit.fitbit.FitbitProvider
 import bluebit.fitcloud.AndroidFitCloudProvider
 import bluebit.fitcloud.fcSDK
 import bluebit.fitcloud.initFitCloudSdk
 import bluebit.core.bluetooth.bleLogWatchdog
+import bluebit.core.bluetooth.BleLogTag
 import java.io.File
 import bluebit.fitbit.diagnostics.FitbitGattCacheDiagnostic
 import bluebit.fitbit.diagnostics.FitbitGattDiagnostic
 import bluebit.fitbit.diagnostics.FitbitGattlinkDiagnostic
 import bluebit.fitbit.diagnostics.FitbitGoldenGateDiagnostic
 import bluebit.fitbit.diagnostics.GattlinkStartupDiagnostic
+import bluebit.fitbit.diagnostics.DtlsBootstrapProbe
+import bluebit.fitbit.diagnostics.CoapReadOnlyProbe
+import bluebit.core.diagnostics.CoapReadOnlyResult
 import bluebit.fitbit.Inspire3PairingHandler
 import bluebit.fitbit.diagnostics.ServerPairingExperiment
 import bluebit.core.ui.components.PairingDialog
@@ -50,10 +57,24 @@ class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.entries.all { it.value }
-        Log.d("BlueBit", "Permission result: $permissions, allGranted=$allGranted")
-        if (allGranted) {
-            lifecycleScope.launch { pairedDeviceCoordinator?.restoreOnLaunch() }
+        val deniedBluetoothPermissions = permissionPolicy.deniedBluetoothPermissions(permissions)
+        val notificationsDenied = permissions[Manifest.permission.POST_NOTIFICATIONS] == false
+        Log.d("BlueBit", "Permission result: $permissions, deniedBluetoothPermissions=$deniedBluetoothPermissions")
+        when {
+            deniedBluetoothPermissions.isNotEmpty() -> {
+                // Do not re-prompt automatically to avoid loop. UI shows disabled state.
+                Log.w("BlueBit", "PERMISSION_DENIED: $deniedBluetoothPermissions. BLE features disabled until granted via Settings.")
+                logBluetoothAdapterState()
+            }
+
+            notificationsDenied -> Log.i(
+                "BlueBit",
+                "NOTIFICATIONS_OPTIONAL: POST_NOTIFICATIONS denied — only this app's notifications are hidden " +
+                    "(e.g. the BLE diagnostics foreground-service notification). In-app connection, auto-restore and diagnostics remain available."
+            )
+        }
+        if (deniedBluetoothPermissions.isEmpty()) {
+            initializeBluetoothDependentOperations()
         }
     }
 
@@ -66,9 +87,28 @@ class MainActivity : ComponentActivity() {
     private lateinit var gattlinkStartupDiagnostic: GattlinkStartupDiagnostic
     private lateinit var pairingHandler: Inspire3PairingHandler
     private lateinit var serverPairingExperiment: ServerPairingExperiment
+    private lateinit var dtlsBootstrapProbe: DtlsBootstrapProbe
+    private lateinit var coapReadOnlyProbe: CoapReadOnlyProbe
     private var bluetoothAdapter: BluetoothAdapter? = null
+    private var scanner: BleScanner? = null
     private val bondState = mutableStateOf("UNKNOWN")
+    private val isDiagnosticLogging = mutableStateOf(false)
+    private val lastCoapReadOnlyResult = mutableStateOf<CoapReadOnlyResult?>(null)
     private var bondDeferred: CompletableDeferred<Boolean>? = null
+
+    /** Classifies permission results; notification permission never blocks BLE features. */
+    private val permissionPolicy = DevicePermissionPolicy(
+        buildSet {
+            add(Manifest.permission.BLUETOOTH_CONNECT)
+            add(Manifest.permission.BLUETOOTH_SCAN)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        },
+    )
+
+    /** Guards [initializeBluetoothDependentOperations] so multiple permission paths cannot run it twice. */
+    private var bluetoothOperationsInitialized = false
 
     // Pairing dialog state
     private val showPairingDialog = mutableStateOf(false)
@@ -92,7 +132,16 @@ class MainActivity : ComponentActivity() {
             val stateName = gattDiagnostic.formatBondState(bondStateExtra)
             val prevName = gattDiagnostic.formatBondState(prevState)
 
-            Log.i("BlueBitGatt", "BOND_STATE_CHANGED: ${device?.address ?: "null"} $prevName -> $stateName")
+            val addressForLog = if (this@MainActivity.hasBluetoothConnectPermission()) {
+                try {
+                    device?.address ?: "null"
+                } catch (e: SecurityException) {
+                    "redacted"
+                }
+            } else {
+                "redacted"
+            }
+            Log.i("BlueBitGatt", "BOND_STATE_CHANGED: $addressForLog $prevName -> $stateName")
 
             bondState.value = stateName
 
@@ -112,22 +161,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         initFitCloudSdk(application)
-
-        requestBlePermissions()
 
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         bluetoothAdapter = bluetoothManager?.adapter
 
         if (bluetoothAdapter == null) {
             Log.e("BlueBit", "BLUETOOTH_NOT_AVAILABLE: No BluetoothAdapter")
-        } else if (!bluetoothAdapter!!.isEnabled) {
-            Log.e("BlueBit", "BLUETOOTH_DISABLED: Adapter present but turned off")
         } else {
-            Log.i("BlueBit", "BLUETOOTH_OK: Adapter enabled, address=${bluetoothAdapter!!.address}")
+            // isEnabled and getAddress require BLUETOOTH_CONNECT on Android 12+.
+            // Defer detailed logging until permission is granted.
+            val connectGranted = hasBluetoothConnectPermission()
+            Log.i("BlueBit", "BLUETOOTH_ADAPTER_PRESENT: connectGranted=$connectGranted")
+            if (connectGranted) {
+                logBluetoothAdapterState()
+            } else {
+                Log.i("BlueBit", "BLUETOOTH_DEFERRED: Waiting for BLUETOOTH_CONNECT before reading adapter state/address")
+            }
         }
 
         gattDiagnostic = FitbitGattDiagnostic(this)
@@ -137,8 +191,13 @@ class MainActivity : ComponentActivity() {
         gattlinkStartupDiagnostic = GattlinkStartupDiagnostic(this)
         pairingHandler = Inspire3PairingHandler(this)
         serverPairingExperiment = ServerPairingExperiment(this)
+        dtlsBootstrapProbe = DtlsBootstrapProbe(this)
+        coapReadOnlyProbe = CoapReadOnlyProbe(this)
 
-        val scanner = if (bluetoothAdapter != null) {
+        // Forward all BLE watchdog events to the optional background file logger.
+        bleLogWatchdog.fileLogger = { entry -> BleDiagnosticLogger.log(entry) }
+
+        scanner = if (bluetoothAdapter != null) {
             AndroidBleScanner(this, bluetoothAdapter!!)
         } else {
             bluebit.core.bluetooth.NoOpBleScanner()
@@ -211,6 +270,42 @@ class MainActivity : ComponentActivity() {
                             }
                         ),
                         ProviderDiagnostic(
+                            id = "goldengate_repro_test",
+                            label = "Test GoldenGate Reproducible",
+                            action = { address ->
+                                try {
+                                    val device = adapter.getRemoteDevice(address)
+                                    goldenGateDiagnostic.startReproducibleExperiment(device)
+                                } catch (e: Exception) {
+                                    Log.e("BlueBit", "GOLDENGATE_REPRO_TEST failed: $address", e)
+                                }
+                            }
+                        ),
+                        ProviderDiagnostic(
+                            id = "goldengate_bond_before_control_test",
+                            label = "GG Bond→Control Experiment",
+                            action = { address ->
+                                try {
+                                    val device = adapter.getRemoteDevice(address)
+                                    goldenGateDiagnostic.startBondBeforeControlExperiment(device)
+                                } catch (e: Exception) {
+                                    Log.e("BlueBit", "GOLDENGATE_BOND_BEFORE_CONTROL failed: $address", e)
+                                }
+                            }
+                        ),
+                        ProviderDiagnostic(
+                            id = "goldengate_transport_only_test",
+                            label = "GG Transport Race Test",
+                            action = { address ->
+                                try {
+                                    val device = adapter.getRemoteDevice(address)
+                                    goldenGateDiagnostic.startTransportOnlyExperiment(device)
+                                } catch (e: Exception) {
+                                    Log.e("BlueBit", "GOLDENGATE_TRANSPORT_ONLY failed: $address", e)
+                                }
+                            }
+                        ),
+                        ProviderDiagnostic(
                             id = "gattlink_startup_test",
                             label = "Test Gattlink Startup",
                             action = { address ->
@@ -222,6 +317,37 @@ class MainActivity : ComponentActivity() {
                                     }
                                 } catch (e: Exception) {
                                     Log.e("BlueBit", "GATTLINK_STARTUP failed: $address", e)
+                                }
+                            }
+                        ),
+                        ProviderDiagnostic(
+                            id = "dtls_bootstrap_probe",
+                            label = "Probe DTLS Bootstrap",
+                            action = { address ->
+                                try {
+                                    val device = adapter.getRemoteDevice(address)
+                                    lifecycleScope.launch {
+                                        val result = dtlsBootstrapProbe.runProbe(device)
+                                        Log.i("BlueBit", "DTLS_BOOTSTRAP_PROBE result=$result")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("BlueBit", "DTLS_BOOTSTRAP_PROBE failed: $address", e)
+                                }
+                            }
+                        ),
+                        ProviderDiagnostic(
+                            id = "coap_readonly_probe",
+                            label = "Probe CoAP Read-Only",
+                            action = { address ->
+                                try {
+                                    val device = adapter.getRemoteDevice(address)
+                                    lifecycleScope.launch {
+                                        val result = coapReadOnlyProbe.runProbe(device)
+                                        lastCoapReadOnlyResult.value = result
+                                        Log.i("BlueBit", "COAP_READONLY_PROBE result=$result")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("BlueBit", "COAP_READONLY_PROBE failed: $address", e)
                                 }
                             }
                         ),
@@ -239,10 +365,34 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             },
+            inspire3PairingHandler = { bleDevice ->
+                val adapter = bluetoothAdapter
+                    ?: return@FitbitProvider Result.failure(IllegalStateException("BluetoothAdapter null"))
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return@FitbitProvider Result.failure(SecurityException("BLUETOOTH_CONNECT not granted"))
+                }
+                bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_PAIRING_START: address=${bleDevice.address}")
+                try {
+                    val device = adapter.getRemoteDevice(bleDevice.address)
+                    val result = pairingHandler.pairDevice(device, extraCaptureMs = 0L)
+                    if (result) {
+                        bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_PAIRING_SUCCESS: address=${bleDevice.address}")
+                        Result.success(Unit)
+                    } else {
+                        bleLogWatchdog.error(BleLogTag.CONNECTION, "INSPIRE3_PAIRING_FAILED: address=${bleDevice.address}")
+                        Result.failure(IllegalStateException("Inspire 3 pairing sequence returned false"))
+                    }
+                } catch (e: Exception) {
+                    bleLogWatchdog.error(BleLogTag.CONNECTION, "INSPIRE3_PAIRING_EXCEPTION: address=${bleDevice.address}, error=${e.message}")
+                    Result.failure(e)
+                }
+            },
         )
         fitcloudProvider = AndroidFitCloudProvider(this, fcSDK)
         val providerRegistry = ProviderRegistry(listOf(fitbitProvider, fitcloudProvider))
-        val providerContext = ProviderContext(providerRegistry, scanner)
+        val providerContext = ProviderContext(providerRegistry, scanner!!)
 
         val pairedDeviceStore = SharedPreferencesPairedDeviceStore(applicationContext)
         pairedDeviceCoordinator = PairedDeviceCoordinator(
@@ -250,12 +400,6 @@ class MainActivity : ComponentActivity() {
             store = pairedDeviceStore,
             scope = lifecycleScope,
         ).also { it.start() }
-        // Auto-reconnect remembered devices once BLE permission is present.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            lifecycleScope.launch { pairedDeviceCoordinator?.restoreOnLaunch() }
-        }
 
         val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -271,6 +415,7 @@ class MainActivity : ComponentActivity() {
                     providerContext = providerContext,
                     bondState = bondState.value,
                     onConnect = { address ->
+                        bleLogWatchdog.info(BleLogTag.CONNECTION, "CONNECT_BUTTON_PRESSED: address=$address")
                         Log.i("BlueBit", "CONNECT_REQUESTED: address=$address")
                     },
                     watchdogDumpAction = { address ->
@@ -280,6 +425,16 @@ class MainActivity : ComponentActivity() {
                         Log.i("BlueBitWatchdog", "Dumped ${bleLogWatchdog.dump().size} entries for $address to ${file.absolutePath}")
                     },
                     pairedDeviceCoordinator = pairedDeviceCoordinator,
+                    lastCoapReadOnlyResult = lastCoapReadOnlyResult.value,
+                    diagnosticLoggingEnabled = isDiagnosticLogging.value,
+                    onDiagnosticLoggingToggle = { enabled ->
+                        isDiagnosticLogging.value = enabled
+                        if (enabled) {
+                            BleDiagnosticLogger.start(this@MainActivity)
+                        } else {
+                            BleDiagnosticLogger.stop(this@MainActivity)
+                        }
+                    },
                 )
                 if (showPairingDialog.value) {
                     PairingDialog(
@@ -299,14 +454,86 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        // Trigger permission flow after all BLE-dependent objects are initialised.
+        // If permissions are already granted this will proceed immediately.
+        requestBlePermissions()
+    }
+
+    /**
+     * Returns true if BLUETOOTH_CONNECT is granted. Required for getAddress(), getName(),
+     * getRemoteDevice(), createBond(), and other BluetoothDevice APIs on Android 12+.
+     */
+    private fun hasBluetoothConnectPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) ==
+                PackageManager.PERMISSION_GRANTED
+        } else {
+            // Pre-Android 12: BLUETOOTH permission covers these operations.
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    /**
+     * Safely logs adapter state. Only call after verifying BLUETOOTH_CONNECT (or pre-12 BLUETOOTH)
+     * is granted, otherwise Android 12+ throws SecurityException for isEnabled()/getAddress().
+     */
+    private fun logBluetoothAdapterState() {
+        val adapter = bluetoothAdapter ?: return
+        if (!hasBluetoothConnectPermission()) {
+            Log.w("BlueBit", "BLUETOOTH_STATE_SKIPPED: BLUETOOTH_CONNECT not granted")
+            return
+        }
+        try {
+            val enabled = adapter.isEnabled
+            val address = adapter.address
+            Log.i("BlueBit", "BLUETOOTH_STATE: enabled=$enabled, address=$address")
+        } catch (e: SecurityException) {
+            Log.e("BlueBit", "BLUETOOTH_STATE_SECURITY_EXCEPTION: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Runs operations that require runtime BLE permissions after the user has granted them.
+     * Called from the permission launcher and when permissions are already granted at startup.
+     * Idempotent: multiple call sites converge to a single run per activity instance.
+     */
+    private fun initializeBluetoothDependentOperations() {
+        if (bluetoothOperationsInitialized) {
+            Log.i("BlueBit", "INIT_BLE_OPS_SKIPPED: already initialized")
+            return
+        }
+        bluetoothOperationsInitialized = true
+        logBluetoothAdapterState()
+        val scannerRef = scanner
+        if (scannerRef == null) {
+            Log.w("BlueBit", "INIT_BLE_OPS: scanner is null")
+        } else {
+            Log.i("BlueBit", "INIT_BLE_OPS: scanner ready, isScanning=${scannerRef.isScanning}")
+        }
+        lifecycleScope.launch {
+            try {
+                pairedDeviceCoordinator?.restoreOnLaunch()
+            } catch (e: SecurityException) {
+                Log.e("BlueBit", "RESTORE_ON_LAUNCH_SECURITY_EXCEPTION: ${e.message}", e)
+            }
+        }
     }
 
     private fun requestBlePermissions() {
         val permissions = mutableListOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
         ).apply {
+            // Location is only required for BLE scanning on Android 11 and lower.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+            // Direct Downloads writes on Android 9 and lower need storage permission.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 add(Manifest.permission.POST_NOTIFICATIONS)
             }
@@ -326,10 +553,26 @@ class MainActivity : ComponentActivity() {
         }
 
         if (needsRequest) {
+            val grantedMap = status.mapValues { it.value == "GRANTED" }
+            val deniedBluetoothPermissions = permissionPolicy.deniedBluetoothPermissions(grantedMap)
+            if (deniedBluetoothPermissions.isEmpty()) {
+                // Bluetooth-critical permissions are already granted (e.g. only the notification
+                // permission is pending) — BLE features must not wait on that non-critical request.
+                val notificationsDenied = status[Manifest.permission.POST_NOTIFICATIONS] == "DENIED"
+                if (notificationsDenied) {
+                    Log.i(
+                        "BlueBit",
+                        "NOTIFICATIONS_OPTIONAL: POST_NOTIFICATIONS pending/denied — only app notifications are affected; " +
+                            "in-app connection and auto-restore initialize now."
+                    )
+                }
+                initializeBluetoothDependentOperations()
+            }
             Log.i("BlueBit", "REQUESTING_PERMISSIONS: ${permissions.joinToString()}")
             permissionLauncher.launch(permissions)
         } else {
             Log.i("BlueBit", "PERMISSIONS_ALREADY_GRANTED: ${permissions.joinToString()}")
+            initializeBluetoothDependentOperations()
         }
     }
 
@@ -592,6 +835,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            scanner?.stopScan()
+        } catch (e: Exception) {
+            Log.w("BlueBit", "STOP_SCAN_ON_DESTROY_FAILED: ${e.message}")
+        }
         fitcloudProvider.dispose()
         gattDiagnostic.disconnect()
         gattCacheDiagnostic.disconnect()
@@ -600,6 +848,7 @@ class MainActivity : ComponentActivity() {
         gattlinkStartupDiagnostic.disconnect()
         pairingHandler.disconnect()
         serverPairingExperiment.cancel()
+        coapReadOnlyProbe.disconnect()
         try {
             unregisterReceiver(bondStateReceiver)
         } catch (_: IllegalArgumentException) {

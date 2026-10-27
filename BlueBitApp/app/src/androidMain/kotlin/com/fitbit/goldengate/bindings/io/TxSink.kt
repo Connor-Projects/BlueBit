@@ -12,6 +12,7 @@ class TxSink : NativeReference {
     }
 
     private var txListener: ((ByteArray) -> Unit)? = null
+    private var txStatusListener: ((ByteArray) -> Int)? = null
     private val _thisPointer: Long
 
     init {
@@ -34,18 +35,37 @@ class TxSink : NativeReference {
         txListener = listener
     }
 
+    /**
+     * Phase 14: optional status-returning TX listener. When set, [putData] returns
+     * its result to the native stack instead of unconditional GG_SUCCESS, and only
+     * calls notifyListener() when the data was accepted (status == 0) — so write
+     * failures are propagated instead of the native stack being told a frame was
+     * delivered when it never reached the air.
+     */
+    fun setTxStatusListener(listener: ((ByteArray) -> Int)?) {
+        txStatusListener = listener
+    }
+
     @Suppress("unused")
     fun putData(data: ByteArray): Int {
         val hex = data.joinToString("") { "%02X".format(it) }
         Log.i(TAG, "Native TX: ${data.size} bytes: $hex")
-        txListener?.invoke(data)
-        // Notify native that data was consumed — without this, native queue fills and stalls.
-        notifyListener(_thisPointer)
-        return 0 // GG_SUCCESS
+        val status = txStatusListener?.let { it(data) } ?: run {
+            txListener?.invoke(data)
+            0
+        }
+        if (status == 0) {
+            // Notify native that data was consumed — without this, native queue fills and stalls.
+            notifyListener(_thisPointer)
+        } else {
+            Log.e(TAG, "putData: transport returned status=$status — NOT acknowledging frame to native")
+        }
+        return status
     }
 
     fun close() {
         txListener = null
+        txStatusListener = null
         destroy(_thisPointer)
     }
 }

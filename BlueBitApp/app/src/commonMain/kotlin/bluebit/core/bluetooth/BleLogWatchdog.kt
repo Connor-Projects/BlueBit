@@ -59,12 +59,20 @@ class BleLogWatchdog(capacity: Int = 2000) {
     private val lock = Any()
     private val maxCapacity = capacity
 
+    /**
+     * Optional sink that receives every log entry synchronously. Used by the
+     * background BLE diagnostic logger to persist events to a file.
+     */
+    @Volatile
+    var fileLogger: ((BleLogEntry) -> Unit)? = null
+
     fun log(level: BleLogLevel, tag: BleLogTag, message: String) {
         val entry = BleLogEntry(System.currentTimeMillis(), level, tag, message)
         synchronized(lock) {
             if (buffer.size >= maxCapacity) buffer.removeFirst()
             buffer.addLast(entry)
         }
+        fileLogger?.invoke(entry)
     }
 
     fun debug(tag: BleLogTag, message: String) = log(BleLogLevel.DEBUG, tag, message)

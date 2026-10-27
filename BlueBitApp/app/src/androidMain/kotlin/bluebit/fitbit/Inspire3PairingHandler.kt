@@ -10,6 +10,8 @@ import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import bluebit.core.bluetooth.BleLogTag
+import bluebit.core.bluetooth.bleLogWatchdog
 import java.io.File
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
@@ -104,6 +106,7 @@ class Inspire3PairingHandler(private val context: Context) {
             try {
                 Log.i(TAG, "========================================")
                 Log.i(TAG, "PAIRING_START: ${device.name} ${device.address}")
+                bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_START: address=${device.address}, name=${device.name ?: "null"}")
 
                 // Initialize frame dump for this pairing attempt
                 val dateStamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())
@@ -137,9 +140,11 @@ class Inspire3PairingHandler(private val context: Context) {
 
                         if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                             Log.i(TAG, "GATT_CONNECTED: requesting service discovery")
+                            bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_GATT_CONNECTED: address=${device.address}")
                             gatt.discoverServices()
                             connectedDeferred.complete(true)
                         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                            bleLogWatchdog.error(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_GATT_DISCONNECTED: address=${device.address}, status=$status")
                             when (status) {
                                 GATT_CONN_TERMINATE_PEER_USER ->
                                     Log.e(TAG, "ERROR_DISCONNECTED_BY_PEER status=$status (GATT_CONN_TERMINATE_PEER_USER)")
@@ -176,6 +181,7 @@ class Inspire3PairingHandler(private val context: Context) {
                         }
                         gattCacheService = cacheService
                         Log.i(TAG, "CACHE_SERVICE_FOUND: ${cacheService.uuid}")
+                        bleLogWatchdog.info(BleLogTag.GATT_SERVICES, "INSPIRE3_HANDLER_CACHE_SERVICE_FOUND: address=${device.address}")
 
                         val pointerChar = cacheService.getCharacteristic(EPHEMERAL_POINTER)
                         if (pointerChar == null) {
@@ -185,6 +191,7 @@ class Inspire3PairingHandler(private val context: Context) {
                         }
 
                         Log.i(TAG, "EPHEMERAL_POINTER_FOUND: ${pointerChar.uuid}")
+                        bleLogWatchdog.info(BleLogTag.GATT_READ, "INSPIRE3_HANDLER_EPHEMERAL_POINTER_FOUND: address=${device.address}")
                         servicesDiscoveredDeferred.complete(true)
 
                         // Step: read ephemeral pointer
@@ -255,6 +262,7 @@ class Inspire3PairingHandler(private val context: Context) {
                                 // RESET_COMPLETE write
                                 if (status == BluetoothGatt.GATT_SUCCESS) {
                                     Log.i(TAG, "RESET_COMPLETE_SENT")
+                                    bleLogWatchdog.info(BleLogTag.GATT_WRITE, "INSPIRE3_HANDLER_RESET_COMPLETE_SENT: address=${device.address}")
                                     resetCompleteDeferred.complete(true)
                                 } else {
                                     Log.e(TAG, "ERROR_RESET_COMPLETE_FAILED status=$status")
@@ -270,6 +278,7 @@ class Inspire3PairingHandler(private val context: Context) {
                                     return
                                 }
                                 Log.i(TAG, "WRITE_SUCCESS")
+                                bleLogWatchdog.info(BleLogTag.GATT_WRITE, "INSPIRE3_HANDLER_EPHEMERAL_WRITE_SUCCESS: address=${device.address}")
                                 writeDeferred.complete(true)
                                 enableGattlinkNotifications(gatt, notificationsEnabledDeferred)
                             }
@@ -281,6 +290,7 @@ class Inspire3PairingHandler(private val context: Context) {
                             Log.i(TAG, "CCC_WRITE_RESULT status=$status")
                             if (status == BluetoothGatt.GATT_SUCCESS) {
                                 Log.i(TAG, "NOTIFICATIONS_ENABLED")
+                                bleLogWatchdog.info(BleLogTag.GATT_NOTIFY, "INSPIRE3_HANDLER_NOTIFICATIONS_ENABLED: address=${device.address}")
                                 notificationsEnabledDeferred.complete(true)
                             } else {
                                 Log.e(TAG, "ERROR_NOTIFICATIONS_FAILED status=$status")
@@ -319,6 +329,7 @@ class Inspire3PairingHandler(private val context: Context) {
                                 when (value[0]) {
                                     GATTLINK_CONTROL_RESET_REQUEST -> {
                                         Log.i(TAG, "RESET_REQUEST received")
+                                        bleLogWatchdog.info(BleLogTag.GATT_NOTIFY, "INSPIRE3_HANDLER_RESET_REQUEST: address=${device.address}")
                                         resetRequestReceived = true
                                         sendResetComplete(gatt)
                                     }
@@ -345,6 +356,11 @@ class Inspire3PairingHandler(private val context: Context) {
                     }
                 }
 
+                bleLogWatchdog.info(
+                    BleLogTag.CONNECTION,
+                    "INSPIRE3_HANDLER_PRE_CONNECT: address=${device.address}, bondState=${device.bondState}, type=${device.type}"
+                )
+
                 gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
                 } else {
@@ -356,6 +372,7 @@ class Inspire3PairingHandler(private val context: Context) {
                 val connected = withTimeoutOrNull(CONNECT_TIMEOUT_MS) { connectedDeferred.await() } == true
                 if (!connected) {
                     Log.e(TAG, "ERROR_CONNECT_TIMEOUT")
+                    bleLogWatchdog.error(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_CONNECT_TIMEOUT: address=${device.address}")
                     disconnect()
                     return@withContext false
                 }
@@ -364,6 +381,7 @@ class Inspire3PairingHandler(private val context: Context) {
                 val servicesDiscovered = withTimeoutOrNull(CONNECT_TIMEOUT_MS) { servicesDiscoveredDeferred.await() } == true
                 if (!servicesDiscovered) {
                     Log.e(TAG, "ERROR_SERVICE_DISCOVERY_FAILED")
+                    bleLogWatchdog.error(BleLogTag.GATT_SERVICES, "INSPIRE3_HANDLER_SERVICE_DISCOVERY_FAILED: address=${device.address}")
                     disconnect()
                     return@withContext false
                 }
@@ -372,6 +390,7 @@ class Inspire3PairingHandler(private val context: Context) {
                 val readOk = withTimeoutOrNull(READ_TIMEOUT_MS) { readDeferred.await() } == true
                 if (!readOk) {
                     Log.e(TAG, "ERROR_READ_FAILED")
+                    bleLogWatchdog.error(BleLogTag.GATT_READ, "INSPIRE3_HANDLER_READ_TIMEOUT: address=${device.address}")
                     disconnect()
                     return@withContext false
                 }
@@ -380,6 +399,7 @@ class Inspire3PairingHandler(private val context: Context) {
                 val writeOk = withTimeoutOrNull(WRITE_TIMEOUT_MS) { writeDeferred.await() } == true
                 if (!writeOk) {
                     Log.e(TAG, "ERROR_WRITE_FAILED")
+                    bleLogWatchdog.error(BleLogTag.GATT_WRITE, "INSPIRE3_HANDLER_WRITE_TIMEOUT: address=${device.address}")
                     disconnect()
                     return@withContext false
                 }
@@ -388,6 +408,7 @@ class Inspire3PairingHandler(private val context: Context) {
                 val notifOk = withTimeoutOrNull(ENABLE_NOTIFICATION_TIMEOUT_MS) { notificationsEnabledDeferred.await() } == true
                 if (!notifOk) {
                     Log.e(TAG, "ERROR_NOTIFICATIONS_FAILED")
+                    bleLogWatchdog.error(BleLogTag.GATT_NOTIFY, "INSPIRE3_HANDLER_NOTIFICATIONS_TIMEOUT: address=${device.address}")
                     disconnect()
                     return@withContext false
                 }
@@ -397,14 +418,17 @@ class Inspire3PairingHandler(private val context: Context) {
                 if (resetResult != true) {
                     if (!resetRequestReceived) {
                         Log.e(TAG, "ERROR_RESET_REQUEST_NOT_RECEIVED")
+                        bleLogWatchdog.error(BleLogTag.GATT_NOTIFY, "INSPIRE3_HANDLER_RESET_REQUEST_MISSING: address=${device.address}")
                     } else {
                         Log.e(TAG, "ERROR_RESET_COMPLETE_FAILED")
+                        bleLogWatchdog.error(BleLogTag.GATT_WRITE, "INSPIRE3_HANDLER_RESET_COMPLETE_FAILED: address=${device.address}")
                     }
                     disconnect()
                     return@withContext false
                 }
 
                 Log.i(TAG, "RESET_HANDSHAKE_COMPLETE")
+                bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_RESET_HANDSHAKE_COMPLETE: address=${device.address}")
 
                 if (extraCaptureMs > 0) {
                     Log.i(TAG, "EXTRA_CAPTURE_START ms=$extraCaptureMs")
@@ -418,6 +442,7 @@ class Inspire3PairingHandler(private val context: Context) {
 
                 Log.i(TAG, "LISTEN_END notifications=$notificationCount bytes=$notifiedBytes")
                 Log.i(TAG, "PAIRING_END success=true")
+                bleLogWatchdog.info(BleLogTag.CONNECTION, "INSPIRE3_HANDLER_PAIRING_SUCCESS: address=${device.address}, notifications=$notificationCount, bytes=$notifiedBytes")
                 Log.i(TAG, "========================================")
                 true
             } finally {

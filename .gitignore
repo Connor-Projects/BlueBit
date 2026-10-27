@@ -18,3 +18,25 @@ fitbit_logcat_*.txt
 # Large decompiled APK output (can be regenerated from ApkInput/)
 /Decoded/
 /Decoded/**
+
+# ---- Curated repository push (2026-10-27) ----
+# Large binary and bulk-capture evidence stays local-only; SHA-256 identities are
+# recorded in prototype_analysis reports. Regenerable/derivable artifacts too.
+*.apk
+*.zip
+*.jar
+
+# Decompiled / derived APK-analysis output (regenerable from the original APKs)
+/apk_analysis_8B01Fj/
+/Reports/apk/
+/prototype_analysis/Fitbit-base-classes6-show-bad-code/
+/prototype_analysis/tmp-dex/
+*.bak
+
+# Bulk logcat captures (kept locally; hash-recorded in reports)
+prototype_analysis/captured-logs/
+prototype_analysis/phase19/captures/phase19_probe_run_2026-10-25_2320.logcat.txt
+prototype_analysis/phase20/captures/m20a_validation_2026-10-25_2340.logcat.txt
+prototype_analysis/phase20/captures/m20a_validation_2026-10-25_post_reboot.logcat.txt
+__pycache__/
+*.pyc

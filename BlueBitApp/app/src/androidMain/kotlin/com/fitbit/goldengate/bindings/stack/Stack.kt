@@ -102,11 +102,17 @@ class Stack(
         Log.i(TAG, "onStackEvent type=$eventType code=$eventCode")
     }
 
+    private var dtlsStatusListener: ((state: Int, code: Int, pskIdentity: ByteArray?) -> Unit)? = null
+
+    fun setDtlsStatusListener(listener: ((state: Int, code: Int, pskIdentity: ByteArray?) -> Unit)?) {
+        dtlsStatusListener = listener
+    }
+
     @Suppress("unused")
     fun onDtlsStatusChange(state: Int, code: Int, pskIdentity: ByteArray?) {
-        val pskStr = pskIdentity?.toString(Charsets.UTF_8) ?: "null"
-        val pskHex = pskIdentity?.joinToString("") { "%02X".format(it) } ?: "null"
-        Log.i(TAG, "onDtlsStatusChange state=$state code=$code psk='$pskStr' pskHex=$pskHex")
+        // Do not log pskIdentity; it is credential-related material.
+        Log.i(TAG, "onDtlsStatusChange state=$state code=$code pskIdentity=<redacted>")
+        dtlsStatusListener?.invoke(state, code, pskIdentity)
     }
 
     fun close() {
