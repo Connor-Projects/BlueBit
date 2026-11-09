@@ -1,0 +1,121 @@
+P6 GATT Discovery Report
+Generated: 2026-10-29 22:19:35
+Device Name: P6_
+Device Address: 90:EB:99:D6:5F:99
+Bond State: NONE
+
+
+========== DEVICE GATT DATABASE ==========
+Device:
+  Name: P6_
+  Address: 90:EB:99:D6:5F:99
+  Services: 5
+
+Service [0]:
+  UUID: 00001800-0000-1000-8000-00805f9b34fb
+  Type: PRIMARY
+  Characteristic [0]:
+    UUID: 00002a00-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [1]:
+    UUID: 00002a01-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+
+Service [1]:
+  UUID: 0000ff12-0000-1000-8000-00805f9b34fb
+  Type: PRIMARY
+  Characteristic [0]:
+    UUID: 0000ff13-0000-1000-8000-00805f9b34fb
+    Properties: WRITE
+    Permissions: NONE(0x0)
+  Characteristic [1]:
+    UUID: 0000ff14-0000-1000-8000-00805f9b34fb
+    Properties: NOTIFY
+    Permissions: NONE(0x0)
+    Descriptor [0]:
+      UUID: 00002902-0000-1000-8000-00805f9b34fb
+      Permissions: NONE(0x0)
+  Characteristic [2]:
+    UUID: 0000ff15-0000-1000-8000-00805f9b34fb
+    Properties: READ, WRITE_NO_RESPONSE
+    Permissions: NONE(0x0)
+
+Service [2]:
+  UUID: 000001ff-3c17-d293-8e48-14fe2e4da212
+  Type: PRIMARY
+  Characteristic [0]:
+    UUID: 0000ff03-0000-1000-8000-00805f9b34fb
+    Properties: READ, WRITE_NO_RESPONSE, NOTIFY
+    Permissions: NONE(0x0)
+    Descriptor [0]:
+      UUID: 00002902-0000-1000-8000-00805f9b34fb
+      Permissions: NONE(0x0)
+  Characteristic [1]:
+    UUID: 0000ff02-0000-1000-8000-00805f9b34fb
+    Properties: WRITE
+    Permissions: NONE(0x0)
+
+Service [3]:
+  UUID: 0000d0ff-3c17-d293-8e48-14fe2e4da212
+  Type: PRIMARY
+  Characteristic [0]:
+    UUID: 0000ffd1-0000-1000-8000-00805f9b34fb
+    Properties: WRITE_NO_RESPONSE
+    Permissions: NONE(0x0)
+  Characteristic [1]:
+    UUID: 0000ffd2-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [2]:
+    UUID: 0000ffd3-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [3]:
+    UUID: 0000ffd4-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [4]:
+    UUID: 0000ffd5-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [5]:
+    UUID: 0000ffd8-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [6]:
+    UUID: 0000fff1-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [7]:
+    UUID: 0000fff2-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [8]:
+    UUID: 0000ffe0-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+  Characteristic [9]:
+    UUID: 0000fff3-0000-1000-8000-00805f9b34fb
+    Properties: READ
+    Permissions: NONE(0x0)
+
+Service [4]:
+  UUID: 00006287-3c17-d293-8e48-14fe2e4da212
+  Type: PRIMARY
+  Characteristic [0]:
+    UUID: 00006387-3c17-d293-8e48-14fe2e4da212
+    Properties: WRITE_NO_RESPONSE
+    Permissions: NONE(0x0)
+  Characteristic [1]:
+    UUID: 00006487-3c17-d293-8e48-14fe2e4da212
+    Properties: WRITE, NOTIFY
+    Permissions: NONE(0x0)
+    Descriptor [0]:
+      UUID: 00002902-0000-1000-8000-00805f9b34fb
+      Permissions: NONE(0x0)
+
+========== END DEVICE GATT DATABASE ==========
+
+

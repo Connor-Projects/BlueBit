@@ -1,0 +1,146 @@
+﻿Compiled from "SourceFile"
+public final class com.topstep.wearkit.base.connector.ConnectorState extends java.lang.Enum<com.topstep.wearkit.base.connector.ConnectorState> {
+  public static final com.topstep.wearkit.base.connector.ConnectorState DISCONNECTED;
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState PRE_CONNECTING;
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState CONNECTING;
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState PRE_CONNECTED;
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState CONNECTED;
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState[] a;
+
+  public com.topstep.wearkit.base.connector.ConnectorState();
+    Code:
+       0: aload_0
+       1: aload_1
+       2: iload_2
+       3: invokespecial #34                 // Method java/lang/Enum."<init>":(Ljava/lang/String;I)V
+       6: return
+
+  public static com.topstep.wearkit.base.connector.ConnectorState[] values();
+    Code:
+       0: getstatic     #43                 // Field a:[Lcom/topstep/wearkit/base/connector/ConnectorState;
+       3: invokevirtual #49                 // Method "[Ljava/lang/Object;".clone:()Ljava/lang/Object;
+       6: checkcast     #50                 // class "[Lcom/topstep/wearkit/base/connector/ConnectorState;"
+       9: areturn
+
+  public static com.topstep.wearkit.base.connector.ConnectorState valueOf(java.lang.String);
+    Code:
+       0: ldc           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+       2: aload_0
+       3: invokestatic  #55                 // Method java/lang/Enum.valueOf:(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;
+       6: checkcast     #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+       9: areturn
+
+  public static final com.topstep.wearkit.base.connector.ConnectorState[] a();
+    Code:
+       0: iconst_5
+       1: anewarray     #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+       4: dup
+       5: dup2
+       6: dup2
+       7: getstatic     #58                 // Field DISCONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      10: iconst_0
+      11: swap
+      12: aastore
+      13: getstatic     #60                 // Field PRE_CONNECTING:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      16: iconst_1
+      17: swap
+      18: aastore
+      19: getstatic     #62                 // Field CONNECTING:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      22: iconst_2
+      23: swap
+      24: aastore
+      25: getstatic     #64                 // Field PRE_CONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      28: iconst_3
+      29: swap
+      30: aastore
+      31: getstatic     #66                 // Field CONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      34: iconst_4
+      35: swap
+      36: aastore
+      37: areturn
+
+  static {};
+    Code:
+       0: new           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+       3: dup
+       4: ldc           #68                 // String DISCONNECTED
+       6: iconst_0
+       7: invokespecial #69                 // Method "<init>":(Ljava/lang/String;I)V
+      10: putstatic     #58                 // Field DISCONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      13: new           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+      16: dup
+      17: ldc           #70                 // String PRE_CONNECTING
+      19: iconst_1
+      20: invokespecial #69                 // Method "<init>":(Ljava/lang/String;I)V
+      23: putstatic     #60                 // Field PRE_CONNECTING:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      26: new           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+      29: dup
+      30: ldc           #71                 // String CONNECTING
+      32: iconst_2
+      33: invokespecial #69                 // Method "<init>":(Ljava/lang/String;I)V
+      36: putstatic     #62                 // Field CONNECTING:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      39: new           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+      42: dup
+      43: ldc           #72                 // String PRE_CONNECTED
+      45: iconst_3
+      46: invokespecial #69                 // Method "<init>":(Ljava/lang/String;I)V
+      49: putstatic     #64                 // Field PRE_CONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      52: new           #5                  // class com/topstep/wearkit/base/connector/ConnectorState
+      55: dup
+      56: ldc           #73                 // String CONNECTED
+      58: iconst_4
+      59: invokespecial #69                 // Method "<init>":(Ljava/lang/String;I)V
+      62: putstatic     #66                 // Field CONNECTED:Lcom/topstep/wearkit/base/connector/ConnectorState;
+      65: invokestatic  #75                 // Method a:()[Lcom/topstep/wearkit/base/connector/ConnectorState;
+      68: putstatic     #43                 // Field a:[Lcom/topstep/wearkit/base/connector/ConnectorState;
+      71: return
+}
+Compiled from "SourceFile"
+public interface com.topstep.wearkit.base.connector.BaseConnector<T extends com.topstep.wearkit.base.connector.BaseConnection> {
+  public abstract com.topstep.wearkit.base.connector.ConnectorState getState();
+
+  public abstract long getNextRetryTime();
+
+  public abstract com.topstep.wearkit.base.connector.DisconnectedCause getDisconnectedCause();
+
+  public abstract io.reactivex.rxjava3.core.Observable<com.topstep.wearkit.base.connector.ConnectorState> observeState();
+
+  public abstract io.reactivex.rxjava3.core.Observable<com.topstep.wearkit.base.connector.ConnectorError> observeError();
+
+  public abstract android.bluetooth.BluetoothDevice getDevice();
+
+  public abstract void connect(java.lang.String);
+
+  public abstract void connect(android.bluetooth.BluetoothDevice);
+
+  public abstract void connect(com.polidea.rxandroidble3.RxBleDevice);
+
+  public abstract void close();
+
+  public abstract void disconnect(com.topstep.wearkit.base.connector.DisconnectedCause$ActiveDisconnect);
+
+  public abstract void reconnect();
+
+  public abstract void release();
+
+  public abstract void registerPreConnectedOperation(com.topstep.wearkit.base.connector.BaseConnector$PreConnectedOperation<? super T>);
+
+  public abstract void registerPreConnectedOperation(io.reactivex.rxjava3.functions.Supplier<io.reactivex.rxjava3.core.CompletableSource>);
+
+  public abstract void newPreConnectedSignal();
+
+  public abstract void setControlConnectedOperation(io.reactivex.rxjava3.core.Completable);
+
+  public abstract T getConnection();
+
+  public abstract void setAutoReconnectMode(com.topstep.wearkit.base.connector.AutoReconnectMode);
+
+  public abstract com.polidea.rxandroidble3.exceptions.BleException bleDisconnectException();
+
+  public abstract void setAutoReconnectInterval(int);
+}

@@ -34,6 +34,15 @@ interface BleConnection {
         writeType: Int
     )
 
+    /**
+     * Request an ATT MTU change. Returns true when the stack reports success
+     * (the negotiated value is the caller's to observe afterwards; Android
+     * publishes the final agreed MTU in [onMtuChanged]). Implementations that
+     * cannot negotiate an MTU return false — Java/BLE stacks without the call
+     * and test doubles inherit this default so the interface stays non-breaking.
+     */
+    suspend fun requestMtu(mtu: Int): Boolean = false
+
     suspend fun readCharacteristic(
         serviceUuid: String,
         characteristicUuid: String,

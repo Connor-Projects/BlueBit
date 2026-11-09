@@ -2,7 +2,6 @@ package bluebit.core.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +22,9 @@ fun SettingsScreen(
     onDebugLoggingToggle: (Boolean) -> Unit,
     onBleDiagnostics: () -> Unit,
     onDiscoveryDiagnostics: () -> Unit,
+    diagnosticModeEnabled: Boolean = false,
+    onDiagnosticModeToggle: (Boolean) -> Unit = {},
+    onOpenDeveloperDiagnostics: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -33,7 +35,7 @@ fun SettingsScreen(
         SectionHeader(title = "Settings")
 
         Card(modifier = Modifier.fillMaxWidth()) {
-            Row(
+            androidx.compose.foundation.layout.Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -50,6 +52,39 @@ fun SettingsScreen(
                 )
             }
         }
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "Diagnostic Mode",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = "Enables advanced diagnostic tools for development and troubleshooting.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = diagnosticModeEnabled,
+                    onCheckedChange = onDiagnosticModeToggle,
+                )
+            }
+        }
+
+        PrimaryButton(
+            text = "Developer Diagnostics",
+            onClick = onOpenDeveloperDiagnostics,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = diagnosticModeEnabled,
+        )
 
         PrimaryButton(
             text = "BLE Diagnostics",

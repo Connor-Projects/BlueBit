@@ -46,6 +46,10 @@ fun BlueBitAppShell(
     lastCoapReadOnlyResult: CoapReadOnlyResult? = null,
     diagnosticLoggingEnabled: Boolean = false,
     onDiagnosticLoggingToggle: (Boolean) -> Unit = {},
+    diagnosticModeEnabled: Boolean = false,
+    onDiagnosticModeToggle: (Boolean) -> Unit = {},
+    diagnosticActions: List<bluebit.core.ui.screens.DiagnosticAction> = emptyList(),
+    developerDiagnosticsContent: (@Composable (onBack: () -> Unit) -> Unit)? = null,
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
 
@@ -149,7 +153,14 @@ fun BlueBitAppShell(
                     onDebugLoggingToggle = onDiagnosticLoggingToggle,
                     onBleDiagnostics = {},
                     onDiscoveryDiagnostics = {},
+                    diagnosticModeEnabled = diagnosticModeEnabled,
+                    onDiagnosticModeToggle = onDiagnosticModeToggle,
+                    onOpenDeveloperDiagnostics = { currentScreen = Screen.DeveloperDiagnostics },
                 )
+
+                is Screen.DeveloperDiagnostics -> {
+                    developerDiagnosticsContent?.invoke { currentScreen = Screen.Settings }
+                }
 
                 is Screen.DeviceDetail -> {
                     val selectedDevice = discoveredDevices.find { it.address == screen.deviceAddress }

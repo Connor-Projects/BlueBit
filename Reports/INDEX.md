@@ -71,6 +71,12 @@ This index lists all discovered investigation and summary reports copied into `G
 | `./FitCloud_Protocol_Findings.md` | `./reports/other/FitCloud_Protocol_Findings.md` | FitCloud Pro BLE Protocol Findings |
 | `./FitCloud_Refactor_Report.md` | `./reports/other/FitCloud_Refactor_Report.md` | BlueBit FitCloud Pro Integration — Final Report |
 | `./FitCloud_WatchFace_Capability_Report.md` | `./reports/other/FitCloud_WatchFace_Capability_Report.md` | FitCloud Watch Face & System UI Capability Report |
+| `./FitCloud_SDK_Compatibility_Report.md` | `./reports/other/FitCloud_SDK_Compatibility_Report.md` | BlueBit — FitCloudPro SDK Compatibility Investigation (FitCloud P6) |
+| `./FitCloud_P6_Validation_Report.md` | `./reports/other/FitCloud_P6_Validation_Report.md` | BlueBit — FitCloud P6 SDK Validation Report |
+| `./research/p6/PROTOCOL_SPECIFICATION.md` | `./reports/other/p6/PROTOCOL_SPECIFICATION.md` | FitCloud P6 — Independent Wire Protocol Specification ([V]/[A]-flagged, incl. §12 corrections) |
+| `./research/p6/IMPLEMENTATION_STATUS.md` | `./reports/other/p6/IMPLEMENTATION_STATUS.md` | FitCloud P6 — Native (non-SDK) Stack Implementation Status (gap, files, bugs D1–D4, boundaries) |
+| `./research/p6/TEST_RESULTS.md` | `./reports/other/p6/TEST_RESULTS.md` | FitCloud P6 — Native Stack Automated Test Results (186/0, per-class counts, failure→fix chronology) |
+| `./research/p6/KNOWN_LIMITATIONS.md` | `./reports/other/p6/KNOWN_LIMITATIONS.md` | FitCloud P6 — Native Stack Known Limitations (TBD hardware items, [A] defences) |
 | `./Gadgetbridge_Investigation_Report.md` | `./reports/other/Gadgetbridge_Investigation_Report.md` | BlueBit - Gadgetbridge Modern Fitbit Onboarding & MobileData Key Investigation |
 | `./Inspire3_Gattlink_Startup_Investigation.md` | `./reports/other/Inspire3_Gattlink_Startup_Investigation.md` | Inspire 3 Gattlink Startup Investigation |
 | `./Reports/inspire3-bonding-report.md` | `./reports/other/inspire3-bonding-report.md` | BlueBit Inspire 3 Bonding Experiment Report |

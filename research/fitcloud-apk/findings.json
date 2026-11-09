@@ -1,0 +1,279 @@
+{
+  "meta": {
+    "report": "FitCloudPro APK Reverse Engineering",
+    "version": 2,
+    "version_note": "v2 = corrected after source-verification pass; v1 crypto/transport conclusions were wrong and are recorded in REPORT.md Appendix A.",
+    "generated": "2026-10-30",
+    "target": {
+      "package": "com.topstep.fitcloudpro",
+      "device": "Samsung Galaxy A17 4G (Android 14)",
+      "apk_source": "adb pull from /data/app/.../com.topstep.fitcloudpro-.../"
+    },
+    "decompilation": {
+      "jadx": "1.5.6",
+      "apktool": "2.11.0",
+      "outputs": ["decompiled/jadx", "decompiled/apktool", "decompiled/apktool_arm64", "decompiled/apktool_en", "decompiled/apktool_xxhdpi"]
+    },
+    "apk_hashes_sha256": {
+      "base.apk": "8DA8D3AAD8045E45C9F9B80352AA37382C156EE55A242012A50EFFC78BBAA97C",
+      "split_config.arm64_v8a.apk": "C35D3D5E14661A27680114A0B00A5BAD573B86A23539473E408E1DC37F69A9C4",
+      "split_config.en.apk": "2C2FD80356A1D555BC292F86D2E38CCFBBE72EE766F38DCC17B6F2314F5705A9",
+      "split_config.xxhdpi.apk": "840AD0A56311AA141B5D9524CC7A07C42B74AA166AF3A53C47D41176C56D18E8"
+    },
+    "evidence_status_legend": {
+      "confirmed": "verified in decompiled code with file:line, and/or cross-checked against hardware logs",
+      "inferred": "code exists, semantics not fully verified",
+      "unknown": "presence only, role unresolved",
+      "disproved": "v1 claim removed after verification"
+    }
+  },
+  "architecture": {
+    "stacks": [
+      {
+        "name": "FitCloud tracker stack (P6 path)",
+        "status": "confirmed",
+        "layers": [
+          "FitCloud SDK v2 (com.topstep.fitcloud.sdk.v2.*)",
+          "Fc#Connector (p150kd.j) - RxAndroidBle client, auth, session keys",
+          "Fc#TransportPacket (U1.e) - framing, CRC16, SN, optional AES-256-CTR",
+          "FcProtocolPacket (p349yd.a) - cmdId|keyId|keyData",
+          "RxAndroidBle -> Android BluetoothGatt"
+        ],
+        "gatt_targets": [
+          {
+            "service": "000001ff-3c17-d293-8e48-14fe2e4da212",
+            "write_char": "0000ff02-0000-1000-8000-00805f9b34fb",
+            "notify_char": "0000ff03-0000-1000-8000-00805f9b34fb",
+            "source": "sources/p150kd/j.java:155-161",
+            "status": "confirmed"
+          },
+          {
+            "service": "00003802-0000-1000-8000-00805f9b34fb",
+            "char": "00004a02-0000-1000-8000-00805f9b34fb",
+            "source": "sources/Nd/e.java, sources/Nd/b.java",
+            "status": "confirmed_code_present; advertisement-only on P6 (hardware)"
+          }
+        ]
+      },
+      {
+        "name": "Realtek BBPro audio stack (BeePro earbuds)",
+        "status": "confirmed",
+        "layers": [
+          "com.realsil.sdk.bbpro.core.transportlayer.TransportLayer(+Packet)",
+          "com.realsil.sdk.bbpro.core.gatt.GattLayer / GattTransportLayer",
+          "com.realsil.sdk.core.bluetooth.connection.le.* / SPP"
+        ],
+        "gatt_profile_defaults": {
+          "service": "000002fd-3c17-d293-8e48-14fe2e4da212",
+          "chars": ["0000fd03-0000-1000-8000-00805f9b34fb", "0000fd04-0000-1000-8000-00805f9b34fb"],
+          "source": "sources/com/realsil/sdk/bbpro/core/gatt/GattTransportConnParams.java:11-15",
+          "status": "confirmed"
+        }
+      }
+    ],
+    "constant_reuse_note": "FitCloud code reuses Realsil constant tables as byte values (StatusIndex.ANC_MODE=0xAA as transport magic; Mmi/*StatusIndex/* constants inside key derivation). BBPro classes themselves are the audio path.",
+    "status": "confirmed"
+  },
+  "transport_packet": {
+    "class": "U1.e",
+    "log_tag": "Fc#TransportPacket",
+    "status": "confirmed",
+    "header": {
+      "size_bytes": 8,
+      "fields": [
+        { "name": "magic", "offset": 0, "value": "0xAA", "status": "confirmed (U1/e.java:79,159)" },
+        { "name": "flags", "offset": 1, "bits": { "0x10": "ack/ack-marker bit (parse U1/e.java:53,166)", "0x20": "ack success bit (parse U1/e.java:54)", "0x40": "encrypted (parse U1/e.java:167; encode)" }, "status": "confirmed" },
+        { "name": "payload_length", "offset": 2, "type": "uint16 big-endian", "status": "confirmed (U1/e.java:168)" },
+        { "name": "crc16", "offset": 4, "type": "uint16 big-endian, table-driven (p339xe.j.f54196a) over payload", "status": "confirmed (U1/e.java:79,130)" },
+        { "name": "sn", "offset": 6, "type": "uint16 big-endian packet sequence, doubles as AES-CTR counter", "status": "confirmed (U1/e.java:170)" }
+      ]
+    },
+    "ack_format": "8-byte header-only frame; success = flags bit 0x20; ackId = SN (U1/e.java:45-56)",
+    "chunking": "long payloads chunked to buffer cap (1024B); chunks re-encrypted per chunk with same base SN IV (U1/e.java:90-133)",
+    "disproved_v1_claim": "BBPro 4-byte TransportLayerPacket header + 2-byte LE opcode is the audio stack's frame, not the FitCloud tracker frame"
+  },
+  "authentication": {
+    "classes": {
+      "auth_operation": "p026be.f (Fc#AuthOperation)",
+      "auth_modes": "p181me.a = BIND/LOGIN/AUTO",
+      "connector": "p150kd.j (Fc#Connector)"
+    },
+    "packet_seqs": {
+      "bind": {
+        "request": { "cmdId": "0x03", "keyId": "0x12", "data": null },
+        "key_packet": { "cmdId": "0x03", "keyId": "0x11", "data": "32-byte userId block (p334x9.b.k(userId,true))" },
+        "source": "p026be/f.java:110-116",
+        "status": "confirmed"
+      },
+      "login": {
+        "request": { "cmdId": "0x03", "keyId": "0x14", "data": null },
+        "key_packet": { "cmdId": "0x03", "keyId": "0x13", "data": "32-byte userId block (p334x9.b.k(userId,false))" },
+        "source": "p026be/f.java:118-123",
+        "status": "confirmed"
+      }
+    },
+    "token": {
+      "generator": "Long.toString(System.currentTimeMillis(), 36)  // base-36 timestamp",
+      "storage": "SharedPreferences fc_internal_storage key token2_<MAC-without-colons>",
+      "source": "p026be/f.java:100-108",
+      "hardware_crosscheck": "P6 log 'Auth login: mu5z25th' matches format (2026-10-29)",
+      "status": "confirmed"
+    },
+    "userId_rules": {
+      "userId_change_forces_firstAuth": true,
+      "resets_syncTimes_and_epo2": true,
+      "source": "p150kd/j.java:271-325",
+      "status": "confirmed",
+      "hardware_crosscheck": "SDK login fails with 'bluebit_user'; succeeds only with official-app-bound userId 26544037"
+    },
+    "sequence_order_caveat": "exact transmit ordering of request vs key packet unresolved from p363zd.b/O7.f sequencing helpers",
+    "status": "confirmed_with_caveat"
+  },
+  "crypto": {
+    "disproved_v1_claim": "v1 said 'no AES, XOR-only'. Actually AES-256-CTR exists; the XOR seen in code is only in (a) key/IV assembly and (b) the CTR keystream XOR step.",
+    "cipher": {
+      "name": "AES-256-CTR",
+      "impl_check": "AES/ECB/NoPadding over IV copy -> keystream; result[i]=data[i]^keystream[i%16]",
+      "util": "p334x9.b.o() logging tag 'Aes256CtrUtil'",
+      "source": "p334x9/b.java:476-516",
+      "status": "confirmed"
+    },
+    "key_derivation": {
+      "source": "p150kd/j.java:382-424",
+      "status": "confirmed",
+      "key": {
+        "len": 32,
+        "field": "p334x9.b.f54121f",
+        "formula": "key[i] = (i<6 ? mac[i] : 0x00) ^ userIdBlock_padded28[i] ^ constBlock[i]",
+        "constBlock": "repeat({0x4D,0x4A,0x42,0x54,0x55,0xAA,0xA5,0x5A}, 4)"
+      },
+      "iv": {
+        "len": 16,
+        "field": "p334x9.b.f54120e",
+        "init": "{0xD4,0xEF,0xF0,0xD3,0xF4,0xE5,0xF0, mac[0..5], 0xA1, 0x00, 0x00}",
+        "per_packet_counter": "IV[14]=sn>>8; IV[15]=sn&0xFF"
+      },
+      "lifecycle": "derived on connect, cleared on disconnect (p150kd/j.java:256-257,417,424)"
+    },
+    "key_packets_plaintext": {
+      "status": "confirmed",
+      "mechanism": "encoder U1.e.b() clears encryption flag when payload is (cmdId=0x03,keyId=0x11|0x13) check payload[0]==3 && payload[2]==17|19 (U1/e.java:76-78)"
+    },
+    "encryption_toggle": {
+      "rx": "header flag 0x40 of received frame sets global f12360g (U1/e.java:167)",
+      "tx": "frames encrypted while f12360g set",
+      "open_question": "does the device ever set 0x40 / are real sessions encrypted?"
+    },
+    "security_assessment": {
+      "key_exchange": "none",
+      "forward_secrecy": "none",
+      "replay_protection": "16-bit SN only",
+      "integrity": "CRC16 (not a MAC)",
+      "grade": "obfuscation-grade; attacker with MAC+userId (both public/on-air) can derive or read session keys"
+    }
+  },
+  "uuid_inventory_summary": {
+    "topstep_uuid_base": "XXXX-3c17-d293-8e48-14fe2e4da212",
+    "fitcloud_tracker": {
+      "transport_service": "000001ff-3c17-d293-8e48-14fe2e4da212",
+      "write_char_short": "0xFF02",
+      "notify_char_short": "0xFF03",
+      "dial_service": "00006287-3c17-d293-8e48-14fe2e4da212",
+      "dial_chars": { "write": "00006387-3c17-d293-8e48-14fe2e4da212 (WNR)", "status": "00006487-3c17-d293-8e48-14fe2e4da212 (W+N+CCCD)" },
+      "config_service": "0000d0ff-3c17-d293-8e48-14fe2e4da212",
+      "config_chars": ["ffd1(WNR)", "ffd2-ffd5(READ)", "ffd8(READ)", "ffe0(READ)", "fff1-fff3(READ)"],
+      "advertised_service": "00003802-0000-1000-8000-00805f9b34fb",
+      "advertised_service_connected_flight_char": "00004a02-0000-1000-8000-00805f9b34fb"
+    },
+    "extra_channels": {
+      "voice_aigc_chars": ["0000ff04-0000-1000-8000-00805f9b34fb", "0000ff05-0000-1000-8000-00805f9b34fb"],
+      "file_transfer_service": "00009966-3c17-d293-8e48-14fe2e4da212",
+      "file_transfer_chars": ["0000ffb1-0000-1000-8000-00805f9b34fb", "0000ffb2-0000-1000-8000-00805f9b34fb"],
+      "unknown_services": ["0000aa55-3c17-d293-8e48-14fe2e4da212", "00006587-3c17-d293-8e48-14fe2e4da212", "020002fd-3c17-d293-8e48-14fe2e4da212"]
+    },
+    "preview_nordic_uart": {
+      "service": "6e400001-b5a3-f393-e0a9-e50e25dcca8d",
+      "tx": "6e400002-b5a3-f393-e0a9-e50e25dcca8d",
+      "rx": "6e400003-b5a3-f393-e0a9-e50e25dcca8d",
+      "source": "sources/com/topstep/fitcloud/sdk/v2/features/builtin/preview/PreviewFeatureImpl.java:58-66",
+      "status": "confirmed"
+    },
+    "audio_stack": {
+      "spp_vendor": "6A24EEAB-4B65-4693-986B-3C26C352264F",
+      "spp_standard": "00001101-0000-1000-8000-00805f9b34fb",
+      "battery_service": "0000180F", "battery_level_char": "00002A19",
+      "device_info_service": "0000180A"
+    },
+    "company_ids": {
+      "accepted_by_scanner": ["0x5448", "0x4254", "0x5A54"],
+      "p6_observed": "0x5A54 (23124)",
+      "source": "SDK FcScanner docs (Reports/FitCloud_SDK_Compatibility_Report.md) + hardware advertisement",
+      "status": "confirmed"
+    },
+    "fitbit_uuids_present": [],
+    "fitbit_uuids_absent": ["ADABFB00-6E7D-4601-BDA2-BFFAA68956BA", "ABBAFF00-E56A-484C-B832-8B17CF6CBFE8", "ABBAFF01", "ABBAFF02", "0000FD62", "0000FD63", "AC2F0045", "AC2F0145"]
+  },
+  "protocol_opcode_examples": {
+    "auth_keyIds": { "bind_pair": ["0x11", "0x12"], "login_pair": ["0x13", "0x14"], "status": "confirmed" },
+    "listener_examples": [
+      { "cmdId": "0x02", "keyId": "0x21", "file": "sources/Hd/q.java:45-48", "status": "confirmed" },
+      { "cmdId": "0x02", "keyId": "0xB6", "file": "sources/Id/f.java:51", "status": "confirmed" },
+      { "cmdId": "0x02", "keyId": "0x9E", "file": "sources/Kd/c.java:86", "status": "confirmed" },
+      { "cmdId": "0x02", "keyId": "0x50", "file": "sources/p150kd/j.java:207", "payload": "u16 3", "status": "confirmed_frame; purpose inferred" }
+    ],
+    "disproved_v1_claim": "v1 opcode table (0x0012/0x0014/0x0015/0x0008/0x0049/0x004D/0x0303) was invented from Realsil constants and removed"
+  },
+  "specific_features": {
+    "ota_dfu": { "manager": "Fd.j (Fc#DfuManager), dfuType-differentiated", "opcodes": "unresolved", "status": "confirmed_class; details_unknown" },
+    "voice_ai": { "impl": "Kd.e + AliAgentSdk", "chars": "ff04/ff05 under 01ff service", "status": "confirmed" },
+    "file_transfer": { "impl": "Fd.F/p166ld.d/p039ce.a/Hd.C0490a", "service": "00009966-3c17-... + ffb1/ffb2", "status": "confirmed_class; semantics inferred" },
+    "preview_stream": { "service": "Nordic UART-compatible 6e400001", "impl": "PreviewFeatureImpl", "status": "confirmed" },
+    "time_sync": { "mechanism": "connector registers TIME_SET/DATE_CHANGED/TIMEZONE_CHANGED receiver", "source": "p150kd/j.java:213-217", "status": "confirmed" }
+  },
+  "p6_hardware_validation": {
+    "report": "Reports/FitCloud_P6_Validation_Report.md",
+    "device": { "name": "P6_", "mac": "90:EB:99:D6:5F:99", "companyId": "0x5A54" },
+    "connect": { "mode": "login (bindOrLogin=false)", "userId": "26544037", "result": "CONNECTED, doLoginAuth result:0, token mu5z25th", "status": "confirmed_hardware" },
+    "queries": {
+      "getDeviceInfo": { "result": "Project 0000000052B6, Patch 0, Flash 0, App 101, IC IC_8762C", "status": "success" },
+      "requestDialPushInfo": { "result": "dial num 19, bin ver 1, position 0, tool 1.5, spaces 0", "status": "success" },
+      "requestUiInfo": { "result": "UI num 3661, serial 1, style 19", "status": "success" },
+      "requestLcdShape": { "result": "consistently fails ('unknown error'); fallback = dial push info shape", "status": "failure" }
+    },
+    "gatt_discovery": {
+      "services": 5,
+      "map_file": "Reports/FitCloud_P6_GATT_Discovery.md",
+      "notable": "00003802 advertised but ABSENT from connected GATT; all char permissions NONE",
+      "status": "confirmed_hardware"
+    },
+    "disproved_v1_claim": "v1 listed 'LCD shape 368x448' for P6 and 'GNSS/4G modem firmware versions' - neither is in the validated evidence; corrected"
+  },
+  "inspire3_compatibility": {
+    "verdict": "ABSENT",
+    "string_matches": { "Inspire": 0, "Fitbit": 0 },
+    "uuid_matches": 0,
+    "protocol_logic": { "gattlink": false, "goldengate": false, "dtls": false, "coap": false },
+    "explains_bluebit_inspire3_blocker": false,
+    "status": "confirmed"
+  },
+  "capability_decoding": {
+    "verified_examples": "dial parser reads capability bits h(284)/h(285)/h(286) with per-variant layouts (p334x9/b.java:120-211)",
+    "disproved_v1_claim": "v1 '150+ feature flags' table was not found in source; removed",
+    "status": "partial"
+  },
+  "open_questions": [
+    "exact wire serialization of FcProtocolPacket (byte position of cmdId/keyId in enclosed payload)",
+    "when the device sets the 0x40 encryption flag (are real sessions ciphertext from device side?)",
+    "full (cmdId,keyId) -> feature opcode map",
+    "roles of services 0000aa55 / 00006587, literal 020002fd filter, and P6's ff12 service",
+    "DFU sub-protocol details",
+    "token TTL and device-side token validation"
+  ],
+  "cross_created_or_updated_files": [
+    "research/fitcloud-apk/REPORT.md",
+    "research/fitcloud-apk/UUID_INVENTORY.md",
+    "research/fitcloud-apk/AUTHENTICATION_ANALYSIS.md",
+    "research/fitcloud-apk/DEVICE_COMPATIBILITY.md",
+    "research/fitcloud-apk/findings.json"
+  ]
+}

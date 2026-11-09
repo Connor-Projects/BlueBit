@@ -15,7 +15,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import bluebit.BlueBitAppShell
@@ -24,16 +27,21 @@ import bluebit.core.bluetooth.android.AndroidBleScanner
 import bluebit.core.bluetooth.android.BleDiagnosticLogger
 import bluebit.core.bluetooth.BleScanner
 import bluebit.core.devices.InMemoryDeviceProfileRepository
+import bluebit.core.diagnostics.DiagnosticLog
 import bluebit.core.provider.ProviderContext
 import bluebit.core.provider.ProviderDiagnostic
 import bluebit.core.provider.ProviderRegistry
+import bluebit.core.ui.screens.DiagnosticAction
+import bluebit.core.ui.screens.DeveloperDiagnosticsScreen
 import bluebit.core.pairing.PairedDeviceCoordinator
 import bluebit.core.permissions.DevicePermissionPolicy
 import bluebit.pairing.SharedPreferencesPairedDeviceStore
 import bluebit.fitbit.FitbitProvider
 import bluebit.fitcloud.AndroidFitCloudProvider
+import bluebit.fitcloud.diagnostics.P6NativeDiagnostic
 import bluebit.fitcloud.fcSDK
 import bluebit.fitcloud.initFitCloudSdk
+import bluebit.fitcloud.native.P6AuthMode
 import bluebit.core.bluetooth.bleLogWatchdog
 import bluebit.core.bluetooth.BleLogTag
 import java.io.File
@@ -89,6 +97,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var serverPairingExperiment: ServerPairingExperiment
     private lateinit var dtlsBootstrapProbe: DtlsBootstrapProbe
     private lateinit var coapReadOnlyProbe: CoapReadOnlyProbe
+    private lateinit var p6NativeDiagnostic: P6NativeDiagnostic
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var scanner: BleScanner? = null
     private val bondState = mutableStateOf("UNKNOWN")
@@ -193,6 +202,7 @@ class MainActivity : ComponentActivity() {
         serverPairingExperiment = ServerPairingExperiment(this)
         dtlsBootstrapProbe = DtlsBootstrapProbe(this)
         coapReadOnlyProbe = CoapReadOnlyProbe(this)
+        p6NativeDiagnostic = P6NativeDiagnostic(this, bluetoothAdapter)
 
         // Forward all BLE watchdog events to the optional background file logger.
         bleLogWatchdog.fileLogger = { entry -> BleDiagnosticLogger.log(entry) }
@@ -391,6 +401,148 @@ class MainActivity : ComponentActivity() {
             },
         )
         fitcloudProvider = AndroidFitCloudProvider(this, fcSDK)
+
+        // Developer Diagnostics actions. Device-requiring actions are marked
+        // unavailable until a device selector is added; they are clearly labelled
+        // rather than faking success.
+        val diagnosticActions = listOf(
+            DiagnosticAction("sys_android_version", "Show Android Version", "System diagnostics", true) {
+                DiagnosticLog.info("Android Version", Build.VERSION.RELEASE)
+            },
+            DiagnosticAction("sys_app_version", "Show App Version", "System diagnostics", true) {
+                DiagnosticLog.info("App Version", BuildConfig.VERSION_NAME)
+            },
+            DiagnosticAction("sys_bt_adapter", "Check Bluetooth Adapter", "System diagnostics", true) {
+                val adapter = bluetoothAdapter
+                DiagnosticLog.info("Bluetooth Adapter", if (adapter != null) "present, enabled=${adapter.isEnabled}" else "absent")
+            },
+            DiagnosticAction("sys_bt_permissions", "Check Granted BT Permissions", "System diagnostics", true) {
+                val connect = ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+                val scan = ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
+                DiagnosticLog.info("BT Permissions", "connect=$connect scan=$scan")
+            },
+            DiagnosticAction("fc_init", "Initialise FitCloud SDK", "FitCloud SDK diagnostics", true) {
+                initFitCloudSdk(application)
+                DiagnosticLog.info("FitCloud SDK", "Initialised (sdk-base/sdk-fitcloud 3.0.2.4)")
+            },
+            DiagnosticAction("fc_version", "Show SDK Version", "FitCloud SDK diagnostics", true) {
+                DiagnosticLog.info("FitCloud SDK", "sdk-base/sdk-fitcloud 3.0.2.4 (Maven-resolved)")
+            },
+            DiagnosticAction("fc_connect", "Test SDK Connection (bindOrLogin=false)", "FitCloud SDK diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99" // P6 device under test
+                    val result = fitcloudProvider.testConnectLogin(address)
+                    if (result.isSuccess) {
+                        DiagnosticLog.info("FitCloud SDK Connect", "CONNECTED: addr=$address, sdk=3.0.2.4, bindOrLogin=false", address)
+                    } else {
+                        DiagnosticLog.error("FitCloud SDK Connect", result.exceptionOrNull()?.message ?: "unknown error", address)
+                    }
+                }
+            },
+            DiagnosticAction("fc_device_info", "Query Device Information", "FitCloud SDK diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99"
+                    val result = fitcloudProvider.testQueryDeviceInfo()
+                    if (result.isSuccess) {
+                        DiagnosticLog.info("FitCloud Query Device Info", result.getOrElse { "" }, address)
+                    } else {
+                        DiagnosticLog.error("FitCloud Query Device Info", result.exceptionOrNull()?.message ?: "unknown error", address)
+                    }
+                }
+            },
+            DiagnosticAction("fc_lcd_shape", "Query LCD Shape", "FitCloud SDK diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99"
+                    val result = fitcloudProvider.testQueryLcdShape()
+                    if (result.isSuccess) {
+                        DiagnosticLog.info("FitCloud Query LCD Shape", result.getOrElse { "" }, address)
+                    } else {
+                        DiagnosticLog.error("FitCloud Query LCD Shape", result.exceptionOrNull()?.message ?: "unknown error", address)
+                    }
+                }
+            },
+            DiagnosticAction("fc_dial_info", "Query Dial Information", "FitCloud SDK diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99"
+                    val result = fitcloudProvider.testQueryDialInfo()
+                    if (result.isSuccess) {
+                        DiagnosticLog.info("FitCloud Query Dial Info", result.getOrElse { "" }, address)
+                    } else {
+                        DiagnosticLog.error("FitCloud Query Dial Info", result.exceptionOrNull()?.message ?: "unknown error", address)
+                    }
+                }
+            },
+            DiagnosticAction("fc_ui_info", "Query UI Information", "FitCloud SDK diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99"
+                    val result = fitcloudProvider.testQueryUiInfo()
+                    if (result.isSuccess) {
+                        DiagnosticLog.info("FitCloud Query UI Info", result.getOrElse { "" }, address)
+                    } else {
+                        DiagnosticLog.error("FitCloud Query UI Info", result.exceptionOrNull()?.message ?: "unknown error", address)
+                    }
+                }
+            },
+            DiagnosticAction("p6_native_login", "Test Native P6 Login (non-SDK)", "P6 native diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99" // P6 device under test (verified pairing)
+                    val adapter = bluetoothAdapter
+                    if (adapter == null) {
+                        DiagnosticLog.error("P6 Native Login", "BluetoothAdapter absent", address)
+                        return@launch
+                    }
+                    try {
+                        val summary = p6NativeDiagnostic.runLoginHandshake(adapter.getRemoteDevice(address))
+                        DiagnosticLog.info("P6 Native Login", summary, address)
+                    } catch (e: Exception) {
+                        // Mirrored to logcat so a captured run carries the failure
+                        // reason; DiagnosticLog alone is app-internal.
+                        Log.e("BlueBitP6Native", "P6 Native LOGIN failed", e)
+                        DiagnosticLog.error(
+                            "P6 Native Login",
+                            "FAILED: ${e.message ?: e::class.java.simpleName}",
+                            address,
+                        )
+                    }
+                }
+            },
+            DiagnosticAction("p6_native_bind", "Test Native P6 Bind (non-SDK)", "P6 native diagnostics", true) {
+                lifecycleScope.launch {
+                    val address = "90:EB:99:D6:5F:99" // P6 device under test (verified pairing)
+                    val adapter = bluetoothAdapter
+                    if (adapter == null) {
+                        DiagnosticLog.error("P6 Native BIND", "BluetoothAdapter absent", address)
+                        return@launch
+                    }
+                    try {
+                        val summary = p6NativeDiagnostic.runLoginHandshake(
+                            adapter.getRemoteDevice(address),
+                            P6AuthMode.BIND,
+                        )
+                        DiagnosticLog.info("P6 Native BIND", summary, address)
+                    } catch (e: Exception) {
+                        // Mirrored to logcat so a captured run carries the failure
+                        // reason; DiagnosticLog alone is app-internal.
+                        Log.e("BlueBitP6Native", "P6 Native BIND failed", e)
+                        DiagnosticLog.error(
+                            "P6 Native BIND",
+                            "FAILED: ${e.message ?: e::class.java.simpleName}",
+                            address,
+                        )
+                    }
+                }
+            },
+            DiagnosticAction("ble_scan", "Scan for BLE Devices", "Bluetooth diagnostics", true) {
+                scanner?.startScan()
+                DiagnosticLog.info("BLE Scan", "Scan started")
+            },
+            DiagnosticAction("ble_dump_gatt", "Dump GATT Services (read-only)", "Bluetooth diagnostics", false) {},
+            DiagnosticAction("ble_connect", "Connect to Selected Device", "Bluetooth diagnostics", false) {},
+            DiagnosticAction("ble_disconnect", "Disconnect from Device", "Bluetooth diagnostics", false) {},
+            DiagnosticAction("proto_service_uuids", "Display Known Service UUIDs", "Protocol diagnostics", false) {},
+            DiagnosticAction("proto_events", "Display Connection Events", "Protocol diagnostics", false) {},
+        )
+
         val providerRegistry = ProviderRegistry(listOf(fitbitProvider, fitcloudProvider))
         val providerContext = ProviderContext(providerRegistry, scanner!!)
 
@@ -411,6 +563,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BlueBitTheme {
+                // Diagnostic Mode state (persisted across restarts), scoped to the UI tree.
+                val diagnosticPrefs = getSharedPreferences("bluebit_diagnostics", Context.MODE_PRIVATE)
+                var diagnosticModeEnabled by remember {
+                    mutableStateOf(diagnosticPrefs.getBoolean("diagnostic_mode", false))
+                }
+
                 BlueBitAppShell(
                     providerContext = providerContext,
                     bondState = bondState.value,
@@ -434,6 +592,23 @@ class MainActivity : ComponentActivity() {
                         } else {
                             BleDiagnosticLogger.stop(this@MainActivity)
                         }
+                    },
+                    diagnosticModeEnabled = diagnosticModeEnabled,
+                    onDiagnosticModeToggle = { enabled ->
+                        diagnosticModeEnabled = enabled
+                        diagnosticPrefs.edit().putBoolean("diagnostic_mode", enabled).apply()
+                    },
+                    diagnosticActions = diagnosticActions,
+                    developerDiagnosticsContent = { onBack ->
+                        DeveloperDiagnosticsScreen(
+                            diagnosticModeEnabled = diagnosticModeEnabled,
+                            onDiagnosticModeToggle = { enabled ->
+                                diagnosticModeEnabled = enabled
+                                diagnosticPrefs.edit().putBoolean("diagnostic_mode", enabled).apply()
+                            },
+                            actions = diagnosticActions,
+                            onBack = onBack,
+                        )
                     },
                 )
                 if (showPairingDialog.value) {
@@ -849,6 +1024,7 @@ class MainActivity : ComponentActivity() {
         pairingHandler.disconnect()
         serverPairingExperiment.cancel()
         coapReadOnlyProbe.disconnect()
+        p6NativeDiagnostic.disconnect()
         try {
             unregisterReceiver(bondStateReceiver)
         } catch (_: IllegalArgumentException) {

@@ -1,0 +1,292 @@
+﻿Compiled from "SourceFile"
+public interface com.topstep.fitcloud.sdk.v2.FcConnector {
+  public abstract void connect(java.lang.String, java.lang.String, boolean, boolean, int, float, float);
+
+  public abstract void connect(java.lang.String, com.topstep.wearkit.base.connector.AuthMode, java.lang.String, java.lang.String, boolean, int, float, float);
+
+  public abstract void connect(android.bluetooth.BluetoothDevice, java.lang.String, boolean, boolean, int, float, float);
+
+  public abstract void connect(com.polidea.rxandroidble3.RxBleDevice, java.lang.String, boolean, boolean, int, float, float);
+
+  public abstract io.reactivex.rxjava3.core.Completable setUserInfo(boolean, int, float, float);
+
+  public abstract void disconnect();
+
+  public abstract void reconnect();
+
+  public abstract void close();
+
+  public abstract io.reactivex.rxjava3.core.Observable<com.topstep.wearkit.base.connector.ConnectorState> observerConnectorState();
+
+  public abstract io.reactivex.rxjava3.core.Observable<com.topstep.wearkit.base.connector.ConnectorError> observerConnectorError();
+
+  public abstract com.topstep.wearkit.base.connector.ConnectorState getConnectorState();
+
+  public abstract android.bluetooth.BluetoothDevice getDevice();
+
+  public abstract long getNextRetryTime();
+
+  public abstract boolean isBindOrLogin();
+
+  public abstract boolean isOtaIng();
+
+  public abstract com.topstep.wearkit.base.connector.DisconnectedCause getDisconnectedCause();
+
+  public abstract com.topstep.wearkit.base.connector.DisconnectedReason getDisconnectedReason();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcConfigFeature configFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcSettingsFeature settingsFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcMessageFeature messageFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcDataFeature dataFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcSpecialFeature specialFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcProductionFeature productionFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcSensorGameFeature sensorGameFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcNaviFeature naviFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcOpusFeature fcOpusFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcAIChatFeature aiChatFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.FcLogFeature logFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.log.FcDebugModeLogFeature debugModeLogManager();
+
+  public abstract com.topstep.fitcloud.sdk.v2.dfu.FcDfuManager newDfuManager(boolean, java.io.File);
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.builtin.preview.PreviewFeature newPreviewFeature();
+
+  public abstract com.topstep.fitcloud.sdk.v2.features.builtin.ai.SpeechAigcFeature newSpeechAigcFeature();
+
+  public abstract void telephonyControlPhoneStatePermission();
+
+  public abstract void musicControlNotificationListenerService(android.service.notification.NotificationListenerService);
+
+  public abstract void mediaControlExitSilentMode();
+
+  public abstract void updateMediaPlayBack();
+
+  public abstract android.bluetooth.BluetoothDevice getClassicDevice();
+
+  public abstract void setAutoCreateBondClassic(boolean);
+
+  public abstract void setAutoCreateBond(boolean);
+
+  public abstract boolean isAutoCreateBond();
+
+  public abstract android.bluetooth.BluetoothDevice getDeviceCanBond();
+
+  public abstract io.reactivex.rxjava3.core.Observable<com.topstep.wearkit.base.utils.Optional<android.bluetooth.BluetoothDevice>> observeDeviceCanBond();
+
+  public abstract io.reactivex.rxjava3.core.Single<com.topstep.wearkit.base.utils.Optional<android.bluetooth.BluetoothDevice>> createBond();
+
+  public abstract io.reactivex.rxjava3.core.Single<com.topstep.wearkit.base.utils.Optional<android.bluetooth.BluetoothDevice>> removeBond();
+
+  public abstract void setAutoReconnectMode(com.topstep.wearkit.base.connector.AutoReconnectMode);
+
+  public abstract com.polidea.rxandroidble3.exceptions.BleException bleDisconnectException();
+
+  public abstract java.lang.String getDeviceToken();
+
+  public abstract int getConnectionId();
+
+  public abstract void registerPreConnectedOperation(com.topstep.wearkit.base.connector.BaseConnector$PreConnectedOperation<? super com.topstep.fitcloud.sdk.internal.connection.FcConnection>);
+
+  public abstract void setAutoReconnectInterval(int);
+
+  public abstract io.reactivex.rxjava3.core.Completable sendRawCommand(byte, byte, byte[]);
+
+  public abstract io.reactivex.rxjava3.core.Single<byte[]> sendRawCommandWithResponse(byte, byte, byte[], byte, byte);
+}
+Compiled from "SourceFile"
+public interface com.topstep.fitcloud.sdk.v2.FcSDK {
+  public static final com.topstep.fitcloud.sdk.v2.FcSDK$Companion Companion;
+
+  public static final int COMPANY_ID_1;
+
+  public static final int COMPANY_ID_2;
+
+  public static final int COMPANY_ID_3;
+
+  public static final int COMPANY_ID_8762C;
+
+  public static final int COMPANY_ID_ZR;
+
+  public static final int COMPANY_ID_ZC;
+
+  public static final int COMPANY_ID_ZB;
+
+  public static final int COMPANY_ID_ZP;
+
+  public static boolean getECG_PRODUCTION_TEST();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #137                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getECG_PRODUCTION_TEST:()Z
+       6: ireturn
+
+  public static void setECG_PRODUCTION_TEST(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #141                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setECG_PRODUCTION_TEST:(Z)V
+       7: return
+
+  public static boolean getUPGRADE_PRODUCTION_TEST();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #146                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getUPGRADE_PRODUCTION_TEST:()Z
+       6: ireturn
+
+  public static void setUPGRADE_PRODUCTION_TEST(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #149                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setUPGRADE_PRODUCTION_TEST:(Z)V
+       7: return
+
+  public static boolean getWEARKIT_COMPAT();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #152                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getWEARKIT_COMPAT:()Z
+       6: ireturn
+
+  public static void setWEARKIT_COMPAT(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #159                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setWEARKIT_COMPAT:(Z)V
+       7: return
+
+  public static boolean getOTA_IGNORE_BATTERY();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #162                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getOTA_IGNORE_BATTERY:()Z
+       6: ireturn
+
+  public static void setOTA_IGNORE_BATTERY(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #165                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setOTA_IGNORE_BATTERY:(Z)V
+       7: return
+
+  public static boolean getOTA_COMPAT_MIGRATE();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #168                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getOTA_COMPAT_MIGRATE:()Z
+       6: ireturn
+
+  public static void setOTA_COMPAT_MIGRATE(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #171                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setOTA_COMPAT_MIGRATE:(Z)V
+       7: return
+
+  public static boolean getDIAL_API_COMPAT_MIGRATE();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #174                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getDIAL_API_COMPAT_MIGRATE:()Z
+       6: ireturn
+
+  public static void setDIAL_API_COMPAT_MIGRATE(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #177                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setDIAL_API_COMPAT_MIGRATE:(Z)V
+       7: return
+
+  public static boolean getCONNECT_SKIP_AUTH();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #180                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getCONNECT_SKIP_AUTH:()Z
+       6: ireturn
+
+  public static void setCONNECT_SKIP_AUTH(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #183                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setCONNECT_SKIP_AUTH:(Z)V
+       7: return
+
+  public static boolean getOTA_IGNORE_LOG();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #186                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getOTA_IGNORE_LOG:()Z
+       6: ireturn
+
+  public static void setOTA_IGNORE_LOG(boolean);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: iload_0
+       4: invokevirtual #189                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setOTA_IGNORE_LOG:(Z)V
+       7: return
+
+  public static com.topstep.fitcloud.sdk.v2.FcSDK$UUIDConfig getUUID_CONFIG();
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: invokevirtual #194                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.getUUID_CONFIG:()Lcom/topstep/fitcloud/sdk/v2/FcSDK$UUIDConfig;
+       6: areturn
+
+  public static void setUUID_CONFIG(com.topstep.fitcloud.sdk.v2.FcSDK$UUIDConfig);
+    Code:
+       0: getstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: aload_0
+       4: invokevirtual #198                // Method com/topstep/fitcloud/sdk/v2/FcSDK$Companion.setUUID_CONFIG:(Lcom/topstep/fitcloud/sdk/v2/FcSDK$UUIDConfig;)V
+       7: return
+
+  static {};
+    Code:
+       0: getstatic     #204                // Field com/topstep/fitcloud/sdk/v2/FcSDK$Companion.a:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       3: putstatic     #135                // Field Companion:Lcom/topstep/fitcloud/sdk/v2/FcSDK$Companion;
+       6: return
+
+  public abstract android.app.Application getApplication();
+
+  public abstract com.polidea.rxandroidble3.RxBleClient getRxBleClient();
+
+  public abstract com.topstep.wearkit.base.ProcessLifecycleObserver getProcessLifecycleObserver();
+
+  public abstract com.topstep.wearkit.base.BluetoothHelper getBluetoothHelper();
+
+  public abstract com.topstep.fitcloud.sdk.scanner.FcScanner getScanner();
+
+  public abstract com.topstep.fitcloud.sdk.v2.FcConnector getConnector();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.base.FcBatteryAbility getBatteryAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.base.FcRemindAbility getRemindAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.base.FcContactsAbility getContactsAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.base.FcNotificationAbility getNotificationAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.config.FcFunctionAbility getFunctionAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.data.FcSportAbility getSportAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.file.FcMusicAbility getMusicAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.file.FcEBookAbility getEBookAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.file.FcAlbumAbility getAlbumAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.file.FcSportUIAbility getSportUIAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.spec.FcSpeechAigcAbility getSpeechAigcAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.spec.FcWomenHealthAbility getWomenHealthAbility();
+
+  public abstract com.topstep.fitcloud.sdk.apis.ability.spec.FcEarphoneAbility getEarphoneAbility();
+
+  public abstract void release();
+}
+Compiled from "SourceFile"
+public final class com.topstep.fitcloud.sdk.connector.TypeAliasesKt {
+}

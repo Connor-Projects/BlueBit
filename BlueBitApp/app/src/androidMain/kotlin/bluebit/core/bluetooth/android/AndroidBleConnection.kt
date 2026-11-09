@@ -59,6 +59,11 @@ class AndroidBleConnection(
     private val operationMutex = Mutex()
     private var pendingOperation: CompletableDeferred<Unit>? = null
     private var pendingReadDeferred: CompletableDeferred<ByteArray>? = null
+    private var pendingMtuDeferred: CompletableDeferred<Boolean>? = null
+
+    /** Last MTU reported by the stack ([BluetoothGattCallback.onMtuChanged]). */
+    var negotiatedMtu: Int = 23
+        private set
 
     private val callback = object : BluetoothGattCallback() {
 
@@ -161,6 +166,8 @@ class AndroidBleConnection(
         ) {
             val value = characteristic.value ?: return
             bleLogWatchdog.debug(BleLogTag.GATT_NOTIFY, "onCharacteristicChanged: ${characteristic.uuid}, value=${value.toHexString()}")
+            // Frame-level evidence for capture analysis (same reason as Write).
+            logger("[AndroidBle] Notify ${characteristic.uuid} len=${value.size} hex=${value.toHexString()}")
             val notification = BleNotification(
                 serviceUuid = characteristic.service.uuid.toString(),
                 characteristicUuid = characteristic.uuid.toString(),
@@ -172,6 +179,11 @@ class AndroidBleConnection(
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
             bleLogWatchdog.info(BleLogTag.CONNECTION, "onMtuChanged: mtu=$mtu, status=$status")
             logger("[AndroidBle] MTU changed to $mtu (status=$status)")
+            negotiatedMtu = mtu
+            pendingMtuDeferred?.let { deferred ->
+                pendingMtuDeferred = null
+                deferred.complete(status == BluetoothGatt.GATT_SUCCESS)
+            }
         }
     }
 
@@ -261,6 +273,12 @@ class AndroidBleConnection(
         writeType: Int,
     ) = operationMutex.withLock {
         val gatt = this.gatt ?: throw IllegalStateException("Not connected")
+        // Frame-level evidence: log every outgoing byte. The P6 probe needs
+        // raw-bytes comparison between the SDK sender and the native sender.
+        logger(
+            "[AndroidBle] Write $characteristicUuid len=${value.size} " +
+                "type=$writeType hex=${value.toHexString()}",
+        )
         val characteristic = findCharacteristic(gatt, serviceUuid, characteristicUuid)
             ?: throw IllegalStateException("Characteristic not found")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -283,6 +301,18 @@ class AndroidBleConnection(
             }
             deferred.await()
         }
+    }
+
+    override suspend fun requestMtu(mtu: Int): Boolean = operationMutex.withLock {
+        val gatt = this.gatt ?: throw IllegalStateException("Not connected")
+        bleLogWatchdog.info(BleLogTag.CONNECTION, "requestMtu: $mtu")
+        val deferred = CompletableDeferred<Boolean>()
+        pendingMtuDeferred = deferred
+        if (!gatt.requestMtu(mtu)) {
+            pendingMtuDeferred = null
+            return@withLock false
+        }
+        deferred.await()
     }
 
     override suspend fun readCharacteristic(

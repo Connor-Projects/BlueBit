@@ -1,0 +1,18 @@
+﻿Compiled from "SourceFile"
+public abstract class com.topstep.fitcloud.sdk.internal.connection.FcConnection extends com.topstep.wearkit.base.connector.BleBaseConnection {
+  public com.topstep.fitcloud.sdk.internal.connection.FcConnection(com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: ldc           #48                 // String params
+       4: invokestatic  #54                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       7: aload_1
+       8: invokespecial #56                 // Method com/topstep/wearkit/base/connector/BleBaseConnection."<init>":(Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)V
+      11: return
+
+  public abstract boolean isOtaIng();
+
+  public abstract void setOtaIng(boolean);
+
+  public abstract <T> io.reactivex.rxjava3.core.Observable<T> operation(com.topstep.fitcloud.sdk.internal.operation.FcOperation<T>);
+}

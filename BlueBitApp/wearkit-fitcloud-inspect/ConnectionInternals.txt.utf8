@@ -1,0 +1,565 @@
+﻿Compiled from "SourceFile"
+public final class com.topstep.fitcloud.sdk.internal.connection.a implements com.topstep.wearkit.base.connector.BleBaseConnection$Factory<com.topstep.fitcloud.sdk.internal.connection.FcConnection> {
+  public final com.topstep.fitcloud.sdk.internal.a a;
+
+  public final int b;
+
+  public final io.reactivex.rxjava3.subjects.PublishSubject<com.topstep.fitcloud.sdk.internal.protocol.FcProtocolPacket> c;
+
+  public com.topstep.fitcloud.sdk.internal.connection.a(com.topstep.fitcloud.sdk.internal.a, int, io.reactivex.rxjava3.subjects.PublishSubject<com.topstep.fitcloud.sdk.internal.protocol.FcProtocolPacket>);
+    Code:
+       0: aload_0
+       1: dup
+       2: dup2
+       3: aload_3
+       4: aload_1
+       5: ldc           #29                 // String threadProvider
+       7: invokestatic  #35                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      10: ldc           #37                 // String receiveProtocolPacketSubject
+      12: invokestatic  #35                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      15: invokespecial #40                 // Method java/lang/Object."<init>":()V
+      18: aload_1
+      19: putfield      #42                 // Field a:Lcom/topstep/fitcloud/sdk/internal/a;
+      22: iload_2
+      23: putfield      #44                 // Field b:I
+      26: aload_3
+      27: putfield      #46                 // Field c:Lio/reactivex/rxjava3/subjects/PublishSubject;
+      30: return
+
+  public com.topstep.fitcloud.sdk.internal.connection.FcConnection a(com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_1
+       1: ldc           #52                 // String params
+       3: invokestatic  #35                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       6: new           #54                 // class com/topstep/fitcloud/sdk/internal/connection/b
+       9: dup
+      10: aload_0
+      11: dup
+      12: dup
+      13: getfield      #42                 // Field a:Lcom/topstep/fitcloud/sdk/internal/a;
+      16: astore_0
+      17: getfield      #44                 // Field b:I
+      20: istore_2
+      21: getfield      #46                 // Field c:Lio/reactivex/rxjava3/subjects/PublishSubject;
+      24: astore_3
+      25: aload_0
+      26: iload_2
+      27: aload_3
+      28: aload_1
+      29: invokespecial #57                 // Method com/topstep/fitcloud/sdk/internal/connection/b."<init>":(Lcom/topstep/fitcloud/sdk/internal/a;ILio/reactivex/rxjava3/subjects/PublishSubject;Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)V
+      32: areturn
+
+  public com.topstep.wearkit.base.connector.BleBaseConnection create(com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: invokevirtual #62                 // Method a:(Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)Lcom/topstep/fitcloud/sdk/internal/connection/FcConnection;
+       5: areturn
+}
+Compiled from "SourceFile"
+public final class com.topstep.fitcloud.sdk.internal.connection.b extends com.topstep.fitcloud.sdk.internal.connection.FcConnection {
+  public static final com.topstep.fitcloud.sdk.internal.connection.b$a d;
+
+  public static final java.lang.String e;
+
+  public final com.topstep.fitcloud.sdk.internal.operation.serialization.d a;
+
+  public final com.topstep.fitcloud.sdk.internal.protocol.serialization.FcProtocolQueue b;
+
+  public volatile boolean c;
+
+  public com.topstep.fitcloud.sdk.internal.connection.b(com.topstep.fitcloud.sdk.internal.a, int, io.reactivex.rxjava3.subjects.PublishSubject<com.topstep.fitcloud.sdk.internal.protocol.FcProtocolPacket>, com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_0
+       1: dup
+       2: dup
+       3: aload         4
+       5: dup
+       6: aload_3
+       7: aload_1
+       8: ldc           #34                 // String threadProvider
+      10: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      13: ldc           #42                 // String receiveProtocolPacketSubject
+      15: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      18: ldc           #44                 // String params
+      20: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      23: invokespecial #47                 // Method com/topstep/fitcloud/sdk/internal/connection/FcConnection."<init>":(Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)V
+      26: new           #49                 // class com/topstep/fitcloud/sdk/internal/operation/serialization/e
+      29: dup
+      30: aload_1
+      31: dup
+      32: aload_0
+      33: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      36: astore        4
+      38: invokeinterface #58,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.a:()Ljava/util/concurrent/ExecutorService;
+      43: astore        5
+      45: invokeinterface #61,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.d:()Lio/reactivex/rxjava3/core/Scheduler;
+      50: astore        6
+      52: aload         4
+      54: aload         5
+      56: aload         6
+      58: invokespecial #64                 // Method com/topstep/fitcloud/sdk/internal/operation/serialization/e."<init>":(Ljava/lang/String;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;)V
+      61: putfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      64: new           #68                 // class com/topstep/fitcloud/sdk/internal/protocol/serialization/a
+      67: dup
+      68: iload_2
+      69: aload_0
+      70: aload_1
+      71: dup
+      72: aload_0
+      73: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      76: astore_1
+      77: new           #12                 // class com/topstep/fitcloud/sdk/internal/connection/b$b
+      80: dup
+      81: astore        4
+      83: aload_0
+      84: dup
+      85: dup
+      86: iload_2
+      87: aload_0
+      88: dup
+      89: invokevirtual #72                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getRxBleConnection:()Lcom/polidea/rxandroidble3/RxBleConnection;
+      92: astore_0
+      93: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+      96: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      99: istore_2
+     100: invokevirtual #86                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getWriteCharacteristic:()Landroid/bluetooth/BluetoothGattCharacteristic;
+     103: astore        5
+     105: invokevirtual #90                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getNotifyObservable:()Lio/reactivex/rxjava3/core/Observable;
+     108: astore        6
+     110: aload_0
+     111: iload_2
+     112: aload         5
+     114: aload         6
+     116: invokespecial #93                 // Method com/topstep/fitcloud/sdk/internal/connection/b$b."<init>":(Lcom/topstep/fitcloud/sdk/internal/connection/FcConnection;Lcom/polidea/rxandroidble3/RxBleConnection;ILandroid/bluetooth/BluetoothGattCharacteristic;Lio/reactivex/rxjava3/core/Observable;)V
+     119: invokeinterface #95,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.b:()Ljava/util/concurrent/ExecutorService;
+     124: astore_0
+     125: invokeinterface #97,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.c:()Lio/reactivex/rxjava3/core/Scheduler;
+     130: astore_2
+     131: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+     134: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+     137: istore        5
+     139: aload_1
+     140: aload         4
+     142: aload_0
+     143: aload_2
+     144: aload_3
+     145: iload         5
+     147: invokespecial #100                // Method com/topstep/fitcloud/sdk/internal/protocol/serialization/a."<init>":(Ljava/lang/String;Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/b;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;Lio/reactivex/rxjava3/subjects/PublishSubject;I)V
+     150: putfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+     153: return
+
+  static {};
+    Code:
+       0: new           #9                  // class com/topstep/fitcloud/sdk/internal/connection/b$a
+       3: dup
+       4: invokespecial #113                // Method com/topstep/fitcloud/sdk/internal/connection/b$a."<init>":()V
+       7: putstatic     #115                // Field d:Lcom/topstep/fitcloud/sdk/internal/connection/b$a;
+      10: return
+
+  public void release(com.polidea.rxandroidble3.exceptions.BleException);
+    Code:
+       0: aload_0
+       1: dup
+       2: aload_1
+       3: ldc           #119                // String disconnectedException
+       5: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       8: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      11: aload_1
+      12: invokeinterface #124,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      17: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      20: aload_1
+      21: invokeinterface #127,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      26: return
+
+  public boolean isOtaIng();
+    Code:
+       0: aload_0
+       1: getfield      #132                // Field c:Z
+       4: ireturn
+
+  public void setOtaIng(boolean);
+    Code:
+       0: aload_0
+       1: iload_1
+       2: putfield      #132                // Field c:Z
+       5: return
+
+  public <T> io.reactivex.rxjava3.core.Observable<T> operation(com.topstep.fitcloud.sdk.internal.operation.FcOperation<T>);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: ldc           #139                // String operation
+       4: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       7: getfield      #132                // Field c:Z
+      10: ifeq          31
+      13: new           #141                // class com/topstep/fitcloud/sdk/exception/FcDeviceBusyException
+      16: dup
+      17: iconst_1
+      18: invokespecial #144                // Method com/topstep/fitcloud/sdk/exception/FcDeviceBusyException."<init>":(I)V
+      21: invokestatic  #150                // Method io/reactivex/rxjava3/core/Observable.error:(Ljava/lang/Throwable;)Lio/reactivex/rxjava3/core/Observable;
+      24: dup
+      25: ldc           #152                // String error(FcDeviceBusyExceptàusyException.REASON_OTA))
+      27: invokestatic  #155                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      30: areturn
+      31: aload_1
+      32: instanceof    #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      35: ifeq          68
+      38: aload_0
+      39: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      42: new           #159                // class com/topstep/fitcloud/sdk/internal/adapter/a
+      45: dup
+      46: aload_1
+      47: aload_0
+      48: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      51: astore_0
+      52: checkcast     #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      55: aload_0
+      56: swap
+      57: invokespecial #162                // Method com/topstep/fitcloud/sdk/internal/adapter/a."<init>":(Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;Lcom/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation;)V
+      60: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      65: goto          78
+      68: aload_0
+      69: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      72: aload_1
+      73: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      78: areturn
+}
+Compiled from "SourceFile"
+public final class com.topstep.fitcloud.sdk.internal.connection.b extends com.topstep.fitcloud.sdk.internal.connection.FcConnection {
+  public static final com.topstep.fitcloud.sdk.internal.connection.b$a d;
+
+  public static final java.lang.String e;
+
+  public final com.topstep.fitcloud.sdk.internal.operation.serialization.d a;
+
+  public final com.topstep.fitcloud.sdk.internal.protocol.serialization.FcProtocolQueue b;
+
+  public volatile boolean c;
+
+  public com.topstep.fitcloud.sdk.internal.connection.b(com.topstep.fitcloud.sdk.internal.a, int, io.reactivex.rxjava3.subjects.PublishSubject<com.topstep.fitcloud.sdk.internal.protocol.FcProtocolPacket>, com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_0
+       1: dup
+       2: dup
+       3: aload         4
+       5: dup
+       6: aload_3
+       7: aload_1
+       8: ldc           #34                 // String threadProvider
+      10: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      13: ldc           #42                 // String receiveProtocolPacketSubject
+      15: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      18: ldc           #44                 // String params
+      20: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      23: invokespecial #47                 // Method com/topstep/fitcloud/sdk/internal/connection/FcConnection."<init>":(Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)V
+      26: new           #49                 // class com/topstep/fitcloud/sdk/internal/operation/serialization/e
+      29: dup
+      30: aload_1
+      31: dup
+      32: aload_0
+      33: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      36: astore        4
+      38: invokeinterface #58,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.a:()Ljava/util/concurrent/ExecutorService;
+      43: astore        5
+      45: invokeinterface #61,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.d:()Lio/reactivex/rxjava3/core/Scheduler;
+      50: astore        6
+      52: aload         4
+      54: aload         5
+      56: aload         6
+      58: invokespecial #64                 // Method com/topstep/fitcloud/sdk/internal/operation/serialization/e."<init>":(Ljava/lang/String;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;)V
+      61: putfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      64: new           #68                 // class com/topstep/fitcloud/sdk/internal/protocol/serialization/a
+      67: dup
+      68: iload_2
+      69: aload_0
+      70: aload_1
+      71: dup
+      72: aload_0
+      73: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      76: astore_1
+      77: new           #12                 // class com/topstep/fitcloud/sdk/internal/connection/b$b
+      80: dup
+      81: astore        4
+      83: aload_0
+      84: dup
+      85: dup
+      86: iload_2
+      87: aload_0
+      88: dup
+      89: invokevirtual #72                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getRxBleConnection:()Lcom/polidea/rxandroidble3/RxBleConnection;
+      92: astore_0
+      93: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+      96: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      99: istore_2
+     100: invokevirtual #86                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getWriteCharacteristic:()Landroid/bluetooth/BluetoothGattCharacteristic;
+     103: astore        5
+     105: invokevirtual #90                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getNotifyObservable:()Lio/reactivex/rxjava3/core/Observable;
+     108: astore        6
+     110: aload_0
+     111: iload_2
+     112: aload         5
+     114: aload         6
+     116: invokespecial #93                 // Method com/topstep/fitcloud/sdk/internal/connection/b$b."<init>":(Lcom/topstep/fitcloud/sdk/internal/connection/FcConnection;Lcom/polidea/rxandroidble3/RxBleConnection;ILandroid/bluetooth/BluetoothGattCharacteristic;Lio/reactivex/rxjava3/core/Observable;)V
+     119: invokeinterface #95,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.b:()Ljava/util/concurrent/ExecutorService;
+     124: astore_0
+     125: invokeinterface #97,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.c:()Lio/reactivex/rxjava3/core/Scheduler;
+     130: astore_2
+     131: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+     134: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+     137: istore        5
+     139: aload_1
+     140: aload         4
+     142: aload_0
+     143: aload_2
+     144: aload_3
+     145: iload         5
+     147: invokespecial #100                // Method com/topstep/fitcloud/sdk/internal/protocol/serialization/a."<init>":(Ljava/lang/String;Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/b;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;Lio/reactivex/rxjava3/subjects/PublishSubject;I)V
+     150: putfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+     153: return
+
+  static {};
+    Code:
+       0: new           #9                  // class com/topstep/fitcloud/sdk/internal/connection/b$a
+       3: dup
+       4: invokespecial #113                // Method com/topstep/fitcloud/sdk/internal/connection/b$a."<init>":()V
+       7: putstatic     #115                // Field d:Lcom/topstep/fitcloud/sdk/internal/connection/b$a;
+      10: return
+
+  public void release(com.polidea.rxandroidble3.exceptions.BleException);
+    Code:
+       0: aload_0
+       1: dup
+       2: aload_1
+       3: ldc           #119                // String disconnectedException
+       5: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       8: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      11: aload_1
+      12: invokeinterface #124,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      17: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      20: aload_1
+      21: invokeinterface #127,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      26: return
+
+  public boolean isOtaIng();
+    Code:
+       0: aload_0
+       1: getfield      #132                // Field c:Z
+       4: ireturn
+
+  public void setOtaIng(boolean);
+    Code:
+       0: aload_0
+       1: iload_1
+       2: putfield      #132                // Field c:Z
+       5: return
+
+  public <T> io.reactivex.rxjava3.core.Observable<T> operation(com.topstep.fitcloud.sdk.internal.operation.FcOperation<T>);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: ldc           #139                // String operation
+       4: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       7: getfield      #132                // Field c:Z
+      10: ifeq          31
+      13: new           #141                // class com/topstep/fitcloud/sdk/exception/FcDeviceBusyException
+      16: dup
+      17: iconst_1
+      18: invokespecial #144                // Method com/topstep/fitcloud/sdk/exception/FcDeviceBusyException."<init>":(I)V
+      21: invokestatic  #150                // Method io/reactivex/rxjava3/core/Observable.error:(Ljava/lang/Throwable;)Lio/reactivex/rxjava3/core/Observable;
+      24: dup
+      25: ldc           #152                // String error(FcDeviceBusyExceptàusyException.REASON_OTA))
+      27: invokestatic  #155                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      30: areturn
+      31: aload_1
+      32: instanceof    #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      35: ifeq          68
+      38: aload_0
+      39: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      42: new           #159                // class com/topstep/fitcloud/sdk/internal/adapter/a
+      45: dup
+      46: aload_1
+      47: aload_0
+      48: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      51: astore_0
+      52: checkcast     #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      55: aload_0
+      56: swap
+      57: invokespecial #162                // Method com/topstep/fitcloud/sdk/internal/adapter/a."<init>":(Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;Lcom/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation;)V
+      60: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      65: goto          78
+      68: aload_0
+      69: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      72: aload_1
+      73: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      78: areturn
+}
+Compiled from "SourceFile"
+public final class com.topstep.fitcloud.sdk.internal.connection.b extends com.topstep.fitcloud.sdk.internal.connection.FcConnection {
+  public static final com.topstep.fitcloud.sdk.internal.connection.b$a d;
+
+  public static final java.lang.String e;
+
+  public final com.topstep.fitcloud.sdk.internal.operation.serialization.d a;
+
+  public final com.topstep.fitcloud.sdk.internal.protocol.serialization.FcProtocolQueue b;
+
+  public volatile boolean c;
+
+  public com.topstep.fitcloud.sdk.internal.connection.b(com.topstep.fitcloud.sdk.internal.a, int, io.reactivex.rxjava3.subjects.PublishSubject<com.topstep.fitcloud.sdk.internal.protocol.FcProtocolPacket>, com.topstep.wearkit.base.connector.BleBaseConnection$Params);
+    Code:
+       0: aload_0
+       1: dup
+       2: dup
+       3: aload         4
+       5: dup
+       6: aload_3
+       7: aload_1
+       8: ldc           #34                 // String threadProvider
+      10: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      13: ldc           #42                 // String receiveProtocolPacketSubject
+      15: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      18: ldc           #44                 // String params
+      20: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+      23: invokespecial #47                 // Method com/topstep/fitcloud/sdk/internal/connection/FcConnection."<init>":(Lcom/topstep/wearkit/base/connector/BleBaseConnection$Params;)V
+      26: new           #49                 // class com/topstep/fitcloud/sdk/internal/operation/serialization/e
+      29: dup
+      30: aload_1
+      31: dup
+      32: aload_0
+      33: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      36: astore        4
+      38: invokeinterface #58,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.a:()Ljava/util/concurrent/ExecutorService;
+      43: astore        5
+      45: invokeinterface #61,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.d:()Lio/reactivex/rxjava3/core/Scheduler;
+      50: astore        6
+      52: aload         4
+      54: aload         5
+      56: aload         6
+      58: invokespecial #64                 // Method com/topstep/fitcloud/sdk/internal/operation/serialization/e."<init>":(Ljava/lang/String;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;)V
+      61: putfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      64: new           #68                 // class com/topstep/fitcloud/sdk/internal/protocol/serialization/a
+      67: dup
+      68: iload_2
+      69: aload_0
+      70: aload_1
+      71: dup
+      72: aload_0
+      73: invokevirtual #53                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getDeviceMacAddress:()Ljava/lang/String;
+      76: astore_1
+      77: new           #12                 // class com/topstep/fitcloud/sdk/internal/connection/b$b
+      80: dup
+      81: astore        4
+      83: aload_0
+      84: dup
+      85: dup
+      86: iload_2
+      87: aload_0
+      88: dup
+      89: invokevirtual #72                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getRxBleConnection:()Lcom/polidea/rxandroidble3/RxBleConnection;
+      92: astore_0
+      93: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+      96: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+      99: istore_2
+     100: invokevirtual #86                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getWriteCharacteristic:()Landroid/bluetooth/BluetoothGattCharacteristic;
+     103: astore        5
+     105: invokevirtual #90                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getNotifyObservable:()Lio/reactivex/rxjava3/core/Observable;
+     108: astore        6
+     110: aload_0
+     111: iload_2
+     112: aload         5
+     114: aload         6
+     116: invokespecial #93                 // Method com/topstep/fitcloud/sdk/internal/connection/b$b."<init>":(Lcom/topstep/fitcloud/sdk/internal/connection/FcConnection;Lcom/polidea/rxandroidble3/RxBleConnection;ILandroid/bluetooth/BluetoothGattCharacteristic;Lio/reactivex/rxjava3/core/Observable;)V
+     119: invokeinterface #95,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.b:()Ljava/util/concurrent/ExecutorService;
+     124: astore_0
+     125: invokeinterface #97,  1           // InterfaceMethod com/topstep/fitcloud/sdk/internal/a.c:()Lio/reactivex/rxjava3/core/Scheduler;
+     130: astore_2
+     131: invokevirtual #76                 // Method com/topstep/wearkit/base/connector/BleBaseConnection.getMtuMaxBatchSize:()I
+     134: invokestatic  #82                 // Method kotlin/ranges/RangesKt.coerceAtMost:(II)I
+     137: istore        5
+     139: aload_1
+     140: aload         4
+     142: aload_0
+     143: aload_2
+     144: aload_3
+     145: iload         5
+     147: invokespecial #100                // Method com/topstep/fitcloud/sdk/internal/protocol/serialization/a."<init>":(Ljava/lang/String;Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/b;Ljava/util/concurrent/ExecutorService;Lio/reactivex/rxjava3/core/Scheduler;Lio/reactivex/rxjava3/subjects/PublishSubject;I)V
+     150: putfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+     153: return
+
+  static {};
+    Code:
+       0: new           #9                  // class com/topstep/fitcloud/sdk/internal/connection/b$a
+       3: dup
+       4: invokespecial #113                // Method com/topstep/fitcloud/sdk/internal/connection/b$a."<init>":()V
+       7: putstatic     #115                // Field d:Lcom/topstep/fitcloud/sdk/internal/connection/b$a;
+      10: return
+
+  public void release(com.polidea.rxandroidble3.exceptions.BleException);
+    Code:
+       0: aload_0
+       1: dup
+       2: aload_1
+       3: ldc           #119                // String disconnectedException
+       5: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       8: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      11: aload_1
+      12: invokeinterface #124,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      17: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      20: aload_1
+      21: invokeinterface #127,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue.terminate:(Lcom/polidea/rxandroidble3/exceptions/BleException;)V
+      26: return
+
+  public boolean isOtaIng();
+    Code:
+       0: aload_0
+       1: getfield      #132                // Field c:Z
+       4: ireturn
+
+  public void setOtaIng(boolean);
+    Code:
+       0: aload_0
+       1: iload_1
+       2: putfield      #132                // Field c:Z
+       5: return
+
+  public <T> io.reactivex.rxjava3.core.Observable<T> operation(com.topstep.fitcloud.sdk.internal.operation.FcOperation<T>);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: ldc           #139                // String operation
+       4: invokestatic  #40                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       7: getfield      #132                // Field c:Z
+      10: ifeq          31
+      13: new           #141                // class com/topstep/fitcloud/sdk/exception/FcDeviceBusyException
+      16: dup
+      17: iconst_1
+      18: invokespecial #144                // Method com/topstep/fitcloud/sdk/exception/FcDeviceBusyException."<init>":(I)V
+      21: invokestatic  #150                // Method io/reactivex/rxjava3/core/Observable.error:(Ljava/lang/Throwable;)Lio/reactivex/rxjava3/core/Observable;
+      24: dup
+      25: ldc           #152                // String error(FcDeviceBusyExceptàusyException.REASON_OTA))
+      27: invokestatic  #155                // Method kotlin/jvm/internal/Intrinsics.checkNotNullExpressionValue:(Ljava/lang/Object;Ljava/lang/String;)V
+      30: areturn
+      31: aload_1
+      32: instanceof    #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      35: ifeq          68
+      38: aload_0
+      39: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      42: new           #159                // class com/topstep/fitcloud/sdk/internal/adapter/a
+      45: dup
+      46: aload_1
+      47: aload_0
+      48: getfield      #102                // Field b:Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;
+      51: astore_0
+      52: checkcast     #157                // class com/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation
+      55: aload_0
+      56: swap
+      57: invokespecial #162                // Method com/topstep/fitcloud/sdk/internal/adapter/a."<init>":(Lcom/topstep/fitcloud/sdk/internal/protocol/serialization/FcProtocolQueue;Lcom/topstep/fitcloud/sdk/internal/adapter/FcProtocolOperation;)V
+      60: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      65: goto          78
+      68: aload_0
+      69: getfield      #66                 // Field a:Lcom/topstep/fitcloud/sdk/internal/operation/serialization/d;
+      72: aload_1
+      73: invokeinterface #164,  2          // InterfaceMethod com/topstep/fitcloud/sdk/internal/operation/serialization/d.a:(Lcom/topstep/fitcloud/sdk/internal/operation/FcOperation;)Lio/reactivex/rxjava3/core/Observable;
+      78: areturn
+}
